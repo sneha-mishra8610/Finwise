@@ -48,7 +48,7 @@ public class Expense {
     // Who created the expense (may differ from payerId)
     private String createdBy;
 
-    // Optional URL to an image stored in Firebase Storage
+    // Optional URL to an image
     private String imageUrl;
 
     public String getId() {

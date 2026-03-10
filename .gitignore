@@ -19,9 +19,7 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
-# Specific files
-backend/src/main/java/com/example/splitwise/controller/AdminController.java
-
 # Env
 .env
+.env.*
 *.log

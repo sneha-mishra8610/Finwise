@@ -18,15 +18,12 @@ public class UserService {
     private final UserRepository userRepository;
     private final ActivityRepository activityRepository;
     private final PendingInvitationRepository pendingInvitationRepository;
-    private final NotificationService notificationService;
 
     public UserService(UserRepository userRepository, ActivityRepository activityRepository,
-                       PendingInvitationRepository pendingInvitationRepository,
-                       NotificationService notificationService) {
+                       PendingInvitationRepository pendingInvitationRepository) {
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
         this.pendingInvitationRepository = pendingInvitationRepository;
-        this.notificationService = notificationService;
     }
 
     public User createUser(User user) {

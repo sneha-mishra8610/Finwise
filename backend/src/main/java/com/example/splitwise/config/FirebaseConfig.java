@@ -7,18 +7,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import jakarta.annotation.PostConstruct;
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class FirebaseConfig {
 
-    @Value("${firebase.service-account-file:}")
-    private String serviceAccountFile;
+    @Value("${firebase.service-account-json:}")
+    private String serviceAccountJson;
 
     @PostConstruct
     public void init() throws IOException {
-        if (serviceAccountFile == null || serviceAccountFile.isBlank()) {
+        if (serviceAccountJson == null || serviceAccountJson.isBlank()) {
             return;
         }
 
@@ -26,12 +27,12 @@ public class FirebaseConfig {
             return;
         }
 
-        try (FileInputStream serviceAccount = new FileInputStream(serviceAccountFile)) {
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .build();
-            FirebaseApp.initializeApp(options);
-        }
+        ByteArrayInputStream stream = new ByteArrayInputStream(
+                serviceAccountJson.getBytes(StandardCharsets.UTF_8));
+        FirebaseOptions options = FirebaseOptions.builder()
+                .setCredentials(GoogleCredentials.fromStream(stream))
+                .build();
+        FirebaseApp.initializeApp(options);
     }
 }
 

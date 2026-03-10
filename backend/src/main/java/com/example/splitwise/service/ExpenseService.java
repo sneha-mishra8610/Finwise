@@ -56,16 +56,6 @@ public class ExpenseService {
         return saved;
     }
 
-    /**
-     * If no customSplits were provided (equal split), compute and store them
-     * so every expense always has explicit per-person amounts.
-     */
-    private void populateSplitsIfEmpty(Expense expense) {
-        if (expense.getCustomSplits() == null || expense.getCustomSplits().isEmpty()) {
-            expense.setCustomSplits(calculateSplits(expense));
-        }
-    }
-
     private void validateCustomSplits(Expense expense){
         if(expense.getCustomSplits()==null||expense.getCustomSplits().isEmpty())
             return;

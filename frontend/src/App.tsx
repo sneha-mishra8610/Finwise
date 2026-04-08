@@ -78,6 +78,9 @@ function getCurrencySymbol(currency: string) {
 }
 
 function App() {
+  const [theme, setTheme] = useState<'dark' | 'light'>(() =>
+    localStorage.getItem('theme') === 'light' ? 'light' : 'dark',
+  )
   const [users, setUsers] = useState<User[]>([])
   const [groups, setGroups] = useState<Group[]>([])
   const [personalExpenses, setPersonalExpenses] = useState<Expense[]>([])
@@ -156,6 +159,14 @@ function App() {
   const [friendInvitations, setFriendInvitations] = useState<PendingInvitation[]>([])
 
   const isAuthenticated = !!authToken
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  function toggleTheme() {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
+  }
 
   const authedFetch = React.useCallback(async (input: RequestInfo | URL, init: RequestInit = {}) => {
     const headers = new Headers(init.headers || {})
@@ -728,9 +739,10 @@ function remainingPercentage(): number {
 
   if (!isAuthenticated) {
     return (
-      <div className="app">
+      <div className={`app ${theme === 'light' ? 'light-mode' : ''}`}>
         <header className="app-header">
           <div className="header-left">
+            <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme" title="Toggle theme">🌙</button>
             <h1>Splitwise</h1>
           </div>
         </header>
@@ -893,11 +905,11 @@ function remainingPercentage(): number {
   }
 
   return (
-    <div className="app">
+    <div className={`app ${theme === 'light' ? 'light-mode' : ''}`}>
       <header className="app-header">
         <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme" title="Toggle theme">🌙</button>
           <h1 style={{ margin: 0 }}>Splitwise</h1>
-          <span className="currency-badge">Currency: {getCurrencySymbol(expenseCurrency)} ({expenseCurrency})</span>
         </div>
         <div className="header-center">
           <nav className="tabs">
@@ -932,7 +944,14 @@ function remainingPercentage(): number {
           )}
         </div>
         <div className="header-right">
-          <button onClick={handleShowNotifications} style={{ marginRight: '0.5rem' }}>Notifications</button>
+          <button
+            onClick={handleShowNotifications}
+            style={{ marginRight: '0.5rem' }}
+            aria-label="Notifications"
+            title="Notifications"
+          >
+            🔔
+          </button>
           <button onClick={() => { localStorage.removeItem('authToken'); localStorage.removeItem('currentUserId'); setAuthToken(null); setCurrentUserId('') }}>Log out</button>
         </div>
       </header>
@@ -943,7 +962,7 @@ function remainingPercentage(): number {
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
           background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
-          <div style={{ background: '#fff', padding: 24, borderRadius: 8, minWidth: 320, maxWidth: 400, boxShadow: '0 2px 12px rgba(0,0,0,0.2)' }}>
+          <div style={{ background: '#E6E6FA', color: '#6A0DAD', padding: 24, borderRadius: 8, minWidth: 320, maxWidth: 400, boxShadow: '0 2px 12px rgba(0,0,0,0.2)' }}>
             <h2>Notifications</h2>
             {loadingNotifications ? (
               <div>Loading...</div>
@@ -956,7 +975,7 @@ function remainingPercentage(): number {
                 {pendingExpenses.map(e => (
                   <li key={e.id} style={{ marginBottom: 12, borderBottom: '1px solid #eee', paddingBottom: 8 }}>
                     <strong>{e.description}</strong><br />
-                    Amount: {getCurrencySymbol(e.currency)}{e.amount} ({e.currency}) <br />
+                    Amount: ₹{e.amount} <br />
                     Type: {e.type}
                   </li>
                 ))}

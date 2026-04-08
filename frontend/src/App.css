@@ -12,6 +12,8 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: #12121a;
+  color: #fff;
 }
 
 /* ── Header ── */
@@ -36,6 +38,24 @@
   font-size: 1.4rem;
   margin: 0;
   white-space: nowrap;
+}
+
+.theme-toggle {
+  background: #5c4dff;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.theme-toggle:hover {
+  background: #4a3de6;
 }
 
 .currency-badge {
@@ -649,6 +669,57 @@ select:focus {
   color: #74c0fc;
   font-size: 0.85rem;
   margin-top: 0.3rem;
+}
+
+/* ── Light mode ── */
+.app.light-mode {
+  background: #f7f4ff;
+  color: #2c1b47;
+}
+
+.app.light-mode .app-header {
+  background: #ede7ff;
+  border-bottom: 1px solid #c9baff;
+}
+
+.app.light-mode .tab {
+  color: rgba(44, 27, 71, 0.7);
+}
+
+.app.light-mode .tab:hover {
+  color: #2c1b47;
+  background: rgba(92, 77, 255, 0.12);
+}
+
+.app.light-mode .tab-active {
+  color: #fff;
+}
+
+.app.light-mode .panel {
+  background: #ffffff;
+  border-color: #dbcfff;
+}
+
+.app.light-mode .card {
+  background: #f6f2ff;
+  border-color: #d5c8ff;
+}
+
+.app.light-mode input[type="text"],
+.app.light-mode input[type="email"],
+.app.light-mode input[type="password"],
+.app.light-mode input[type="number"],
+.app.light-mode input[type="url"],
+.app.light-mode input[type="date"],
+.app.light-mode select,
+.app.light-mode .search-input {
+  background: #fff;
+  color: #2c1b47;
+  border-color: #cdbfff;
+}
+
+.app.light-mode .muted {
+  color: rgba(44, 27, 71, 0.65);
 }
 
 /* ── Bar chart (daily spending) ── */

@@ -1,5 +1,5 @@
 import './App.css'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
 
@@ -78,81 +78,66 @@ function getCurrencySymbol(currency: string) {
 }
 
 function App() {
-  // ...existing useState hooks...
-
-  // Place currentUserId, selectedGroupId, and users useState hooks at the top
   const [currentUserId, setCurrentUserId] = useState<string>(() => localStorage.getItem('currentUserId') || '');
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [users, setUsers] = useState<User[]>([]);
 
-  // Group chat state: map groupId to array of messages (after all useState hooks)
   const [groupChats, setGroupChats] = useState<{ [groupId: string]: { user: string; message: string; timestamp: string }[] }>({});
   const [groupChatInputs, setGroupChatInputs] = useState<{ [groupId: string]: string }>({});
 
-  // Notification modal state (after all useState hooks)
+  const [showExpenseModal, setShowExpenseModal] = useState(false)
+  const [expenseChats, setExpenseChats] = useState<{ [expenseId: string]: { user: string; message: string; timestamp: string }[] }>({});
+  const [expenseChatInputs, setExpenseChatInputs] = useState<{ [expenseId: string]: string }>({});
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [pendingExpenses, setPendingExpenses] = useState<Expense[]>([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [notificationError, setNotificationError] = useState('');
 
-  // ...all other useState hooks...
 
-  // ...all other useState hooks...
-
-  // Place after all useState hooks, and after users is defined
-  // (moved below users useState hook)
-  // (removed duplicate users declaration)
-  // ...other useState hooks...
-
-  // Place after all useState hooks, and after users is defined
   const currentUser: User | null = users.find((u) => u.id === currentUserId) || null;
   const currentUserName = currentUser?.name || 'You';
 
-  // Fetch group chat messages from backend
-  async function fetchGroupChatMessages(groupId: string | null) {
+  // Expense chat fetch (needs groupId)
+  
+
+  // Expense chat send
+  async function handleSendExpenseChatMessage(expenseId: string) {
+    const input = expenseChatInputs[expenseId]?.trim();
+    if (!input) return;
+    // Find groupId for this expense
+    const exp = allGroupExpenses.find(e => e.id === expenseId) || personalExpenses.find(e => e.id === expenseId);
+    const groupId = exp?.groupId;
     if (!groupId) return;
     try {
-      const res = await authedFetch(`${API_BASE}/chat/${groupId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      // Map senderId to user name for display
-      const mapped = Array.isArray(data)
-        ? data.map((msg: any) => ({
-            user: users.find(u => u.id === msg.senderId)?.name || msg.senderId || 'Unknown',
-            message: msg.message,
-            timestamp: msg.timestamp
-          }))
-        : [];
-      setGroupChats(prev => ({ ...prev, [groupId]: mapped }));
+      const res = await authedFetch(`${API_BASE}/chat/${groupId}/expense/${expenseId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senderId: currentUserId, message: input })
+      });
+      if (res.ok) {
+        await fetchExpenseChatMessages(expenseId, groupId);
+      }
     } catch { /* ignore */ }
+    setExpenseChatInputs(prev => ({ ...prev, [expenseId]: '' }));
   }
 
-  // Send message handler for group chat
   async function handleSendGroupChatMessage(groupId: string) {
     const input = groupChatInputs[groupId]?.trim();
     if (!input) return;
     try {
-      // Send to backend with senderId (user id, not name)
       const res = await authedFetch(`${API_BASE}/chat/${groupId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ senderId: currentUserId, message: input })
       });
       if (res.ok) {
-        await fetchGroupChatMessages(groupId); // Refresh chat after sending
+        await fetchGroupChatMessages(groupId);
       }
     } catch { /* ignore */ }
     setGroupChatInputs(prev => ({ ...prev, [groupId]: '' }));
   }
 
-  // ...existing code...
-
-  // ...existing code...
-
-  // (Move this useEffect below groupDetailView declaration)
-    // ...existing useState hooks...
-
-    // Reset all expense form fields to their initial values
     function resetExpenseForm() {
       setExpenseDescription('');
       setExpenseAmount('');
@@ -174,7 +159,6 @@ function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() =>
     localStorage.getItem('theme') === 'light' ? 'light' : 'dark',
   )
-  // (removed duplicate users declaration)
   const [groups, setGroups] = useState<Group[]>([])
   const [personalExpenses, setPersonalExpenses] = useState<Expense[]>([])
   const [groupExpenses, setGroupExpenses] = useState<Expense[]>([])
@@ -183,10 +167,71 @@ function App() {
   const [activityPage, setActivityPage] = useState(0)
   const [activityHasMore, setActivityHasMore] = useState(true)
 
+  // Expense detail modal state
+  const [expenseDetailView, setExpenseDetailView] = useState<Expense | null>(null)
+
   const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem('authToken'))
 
-  // (removed duplicate selectedGroupId declaration)
+  const authedFetch = React.useCallback(async (input: RequestInfo | URL, init: RequestInit = {}) => {
+    const headers = new Headers(init.headers || {})
+    if (authToken) {
+      headers.set('Authorization', `Bearer ${authToken}`)
+    }
+    headers.set('Content-Type', headers.get('Content-Type') || 'application/json')
+    const res = await fetch(input, { ...init, headers })
+    if (res.status === 401) {
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('currentUserId')
+      setAuthToken(null)
+      setCurrentUserId('')
+    }
+    return res
+  }, [authToken])
 
+    const fetchGroupChatMessages = React.useCallback(
+    async (groupId: string | null) => {
+      if (!groupId) return;
+      try {
+        const res = await authedFetch(`${API_BASE}/chat/${groupId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const mapped = Array.isArray(data)
+          ? data.map((msg: { senderId: string; message: string; timestamp: string }) => ({
+              user: users.find(u => u.id === msg.senderId)?.name || msg.senderId || 'Unknown',
+              message: msg.message,
+              timestamp: msg.timestamp
+            }))
+          : [];
+        setGroupChats(prev => ({ ...prev, [groupId]: mapped }));
+      } catch {/* ignore */}
+    },
+    [authedFetch, users, setGroupChats]
+  );
+
+  const fetchExpenseChatMessages = useCallback(async (expenseId: string | null, groupId?: string | null) => {
+    if (!expenseId) return;
+    // Try to find groupId if not provided
+    let gid = groupId;
+    if (!gid) {
+      const exp = allGroupExpenses.find(e => e.id === expenseId) || personalExpenses.find(e => e.id === expenseId);
+      gid = exp?.groupId || '';
+    }
+    if (!gid) return;
+    try {
+      const res = await authedFetch(`${API_BASE}/chat/${gid}/expense/${expenseId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const mapped = Array.isArray(data)
+        ? data.map((msg: { senderId: string; message: string; timestamp: string }) => ({
+            user: users.find(u => u.id === msg.senderId)?.name || msg.senderId || 'Unknown',
+            message: msg.message,
+            timestamp: msg.timestamp
+          }))
+        : [];
+      setExpenseChats(prev => ({ ...prev, [expenseId]: mapped }));
+    } catch {/* */}
+  }, [allGroupExpenses, personalExpenses, users, authedFetch]);
+  
   const [friendNameToAdd, setFriendNameToAdd] = useState('')
   const [friendEmailToAdd, setFriendEmailToAdd] = useState('')
   const [friendAddError, setFriendAddError] = useState('')
@@ -223,26 +268,38 @@ function App() {
 
   const [groupDetailView, setGroupDetailView] = useState<string | null>(null)
 
-  // Poll for group chat messages when viewing a group (must be after groupDetailView is declared)
   useEffect(() => {
     if (!groupDetailView) return;
     let stopped = false;
     async function poll() {
       await fetchGroupChatMessages(groupDetailView);
       if (!stopped) {
-        setTimeout(poll, 3000); // Poll every 3 seconds
+        setTimeout(poll, 3000);
       }
     }
     poll();
     return () => { stopped = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupDetailView]);
+  }, [groupDetailView,fetchGroupChatMessages]);
+
+  // Poll expense chat when expense modal or detail modal is open
+  useEffect(() => {
+    const expense = editingExpense || expenseDetailView;
+    if (!(showExpenseModal && editingExpense) && !expenseDetailView) return;
+    let stopped = false;
+    async function poll() {
+      if (expense)
+        await fetchExpenseChatMessages(expense.id, expense.groupId);
+      if (!stopped) {
+        setTimeout(poll, 3000);
+      }
+    }
+    poll();
+    return () => { stopped = true; };
+  }, [showExpenseModal, editingExpense, expenseDetailView, fetchExpenseChatMessages]);
 
   const [groupSearch, setGroupSearch] = useState('')
   const [friendSearch, setFriendSearch] = useState('')
   const [activitySearch, setActivitySearch] = useState('')
-
-  const [showExpenseModal, setShowExpenseModal] = useState(false)
 
   const [editingFriend, setEditingFriend] = useState<User | null>(null)
   const [editFriendName, setEditFriendName] = useState('')
@@ -273,22 +330,6 @@ function App() {
   function toggleTheme() {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
   }
-
-  const authedFetch = React.useCallback(async (input: RequestInfo | URL, init: RequestInit = {}) => {
-    const headers = new Headers(init.headers || {})
-    if (authToken) {
-      headers.set('Authorization', `Bearer ${authToken}`)
-    }
-    headers.set('Content-Type', headers.get('Content-Type') || 'application/json')
-    const res = await fetch(input, { ...init, headers })
-    if (res.status === 401) {
-      localStorage.removeItem('authToken')
-      localStorage.removeItem('currentUserId')
-      setAuthToken(null)
-      setCurrentUserId('')
-    }
-    return res
-  }, [authToken])
 
   const fetchUsers = React.useCallback(async () => {
     try {
@@ -1085,6 +1126,7 @@ function remainingPercentage(): number {
             <button className="icon-btn" style={{ marginTop: 16 }} onClick={() => setShowNotifications(false)}>Close</button>
           </div>
         </div>
+
       )}
 
       <div className="layout">
@@ -1384,7 +1426,7 @@ function remainingPercentage(): number {
                 </div>
                 <ul className="card-list">
                   {sorted.map((e) => (
-                    <li key={e.id} className="card">
+                    <li key={e.id} className="card" style={{ cursor: 'pointer' }} onClick={() => setExpenseDetailView(e)}>
                       <div className="card-header">
                         <strong>{e.description}</strong>
                         <div style={{ textAlign: 'right' }}>
@@ -1413,7 +1455,7 @@ function remainingPercentage(): number {
                           ) : (
                             <div className="owes-row">
                               <span className="owes-amount">You owe <strong>{getCurrencySymbol(e.currency)}{userShare(e).toFixed(2)}</strong> to {payerName(e.payerId)}</span>
-                              <button className="settle-btn" onClick={() => handleSettleUp(e.id)}>Settle up</button>
+                              <button className="settle-btn" onClick={ev => { ev.stopPropagation(); handleSettleUp(e.id) }}>Settle up</button>
                             </div>
                           )
                         )}
@@ -1424,16 +1466,16 @@ function remainingPercentage(): number {
                           ) : (
                             <div className="owes-row">
                               <span className="you-paid-info">Others owe you <strong>{getCurrencySymbol(e.currency)}{othersOweTotal(e).toFixed(2)}</strong></span>
-                              <button className="settle-btn" onClick={() => handleSettleUp(e.id)}>Settle up</button>
+                              <button className="settle-btn" onClick={ev => { ev.stopPropagation(); handleSettleUp(e.id) }}>Settle up</button>
                             </div>
                           )
                         )}
                         {e.imageUrl && <a href={e.imageUrl} target="_blank" rel="noreferrer">View bill</a>}
                       </div>
                       <div className="card-actions">
-                        <button onClick={() => { startEditExpense(e); setShowExpenseModal(true) }}>Edit</button>
+                        <button onClick={ev => { ev.stopPropagation(); startEditExpense(e); setShowExpenseModal(true) }}>Edit</button>
                         {(e.createdBy === currentUserId || (!e.createdBy && e.payerId === currentUserId)) && (
-                          <button onClick={() => handleDeleteExpense(e)}>Delete</button>
+                          <button onClick={ev => { ev.stopPropagation(); handleDeleteExpense(e) }}>Delete</button>
                         )}
                       </div>
                     </li>
@@ -1502,10 +1544,10 @@ function remainingPercentage(): number {
                         </div>
                         <div className="card-actions">
                           {e.createdBy === currentUserId && (
-                            <button onClick={() => { startEditExpense(e); setShowExpenseModal(true) }}>Edit</button>
+                            <button onClick={ev => { ev.stopPropagation(); startEditExpense(e); setShowExpenseModal(true) }}>Edit</button>
                           )}
                           {(e.createdBy === currentUserId || (!e.createdBy && e.payerId === currentUserId)) && (
-                            <button onClick={() => handleDeleteExpense(e)}>Delete</button>
+                            <button onClick={ev => { ev.stopPropagation(); handleDeleteExpense(e) }}>Delete</button>
                           )}
                         </div>
                       </li>
@@ -1526,7 +1568,7 @@ function remainingPercentage(): number {
                       return db - da
                     })
                     .map((e) => (
-                    <li key={e.id} className="card">
+                    <li key={e.id} className="card" style={{ cursor: 'pointer' }} onClick={() => setExpenseDetailView(e)}>
                       <div className="card-header">
                         <strong>{e.description}</strong>
                         <div style={{ textAlign: 'right' }}>
@@ -1539,10 +1581,10 @@ function remainingPercentage(): number {
                       </div>
                         <div className="card-actions">
                           {e.createdBy === currentUserId && (
-                            <button onClick={() => { startEditExpense(e); setShowExpenseModal(true) }}>Edit</button>
+                            <button onClick={ev => { ev.stopPropagation(); startEditExpense(e); setShowExpenseModal(true) }}>Edit</button>
                           )}
                           {(e.createdBy === currentUserId || (!e.createdBy && e.payerId === currentUserId)) && (
-                            <button onClick={() => handleDeleteExpense(e)}>Delete</button>
+                            <button onClick={ev => { ev.stopPropagation(); handleDeleteExpense(e) }}>Delete</button>
                           )}
                         </div>
                     </li>
@@ -1564,7 +1606,7 @@ function remainingPercentage(): number {
                     .map((e) => {
                       const grpName = groups.find(g => g.id === e.groupId)?.name || 'Unknown group'
                       return (
-                        <li key={e.id} className="card">
+                        <li key={e.id} className="card" style={{ cursor: 'pointer' }} onClick={() => setExpenseDetailView(e)}>
                           <div className="card-header">
                             <div>
                               <strong>{e.description}</strong>
@@ -1586,7 +1628,7 @@ function remainingPercentage(): number {
                               ) : (
                                 <div className="owes-row">
                                   <span className="owes-amount">You owe <strong>{getCurrencySymbol(e.currency)}{userShare(e).toFixed(2)}</strong></span>
-                                  <button className="settle-btn" onClick={() => handleSettleUp(e.id)}>Settle up</button>
+                                  <button className="settle-btn" onClick={ev => { ev.stopPropagation(); handleSettleUp(e.id) }}>Settle up</button>
                                 </div>
                               )
                             )}
@@ -1597,7 +1639,7 @@ function remainingPercentage(): number {
                               ) : (
                                 <div className="owes-row">
                                   <span className="you-paid-info">Others owe you <strong>{getCurrencySymbol(e.currency)}{othersOweTotal(e).toFixed(2)}</strong></span>
-                                  <button className="settle-btn" onClick={() => handleSettleUp(e.id)}>Settle up</button>
+                                  <button className="settle-btn" onClick={ev => { ev.stopPropagation(); handleSettleUp(e.id) }}>Settle up</button>
                                 </div>
                               )
                             )}
@@ -1605,16 +1647,66 @@ function remainingPercentage(): number {
                           </div>
                           <div className="card-actions">
                             {e.createdBy === currentUserId && (
-                              <button onClick={() => { startEditExpense(e); setShowExpenseModal(true) }}>Edit</button>
+                              <button onClick={ev => { ev.stopPropagation(); startEditExpense(e); setShowExpenseModal(true) }}>Edit</button>
                             )}
                             {(e.createdBy === currentUserId || (!e.createdBy && e.payerId === currentUserId)) && (
-                              <button onClick={() => handleDeleteExpense(e)}>Delete</button>
+                              <button onClick={ev => { ev.stopPropagation(); handleDeleteExpense(e) }}>Delete</button>
                             )}
                           </div>
                         </li>
                       )
                     })}
                   {allGroupExpenses.length === 0 && <li className="muted">No group expenses yet</li>}
+
+                    {/* Expense Detail Modal (top-level, always rendered) */}
+                    {expenseDetailView && (
+                      <div className="modal-overlay" onClick={() => setExpenseDetailView(null)}>
+                        <div className="modal" onClick={e => e.stopPropagation()} style={{ minWidth: 350, maxWidth: 500 }}>
+                          <div className="modal-header">
+                            <h2>Expense Details</h2>
+                            <button className="modal-close" onClick={() => setExpenseDetailView(null)}>✕</button>
+                          </div>
+                          <div className="modal-body">
+                            <div><strong>Description:</strong> {expenseDetailView.description}</div>
+                            <div><strong>Amount:</strong> {getCurrencySymbol(expenseDetailView.currency)}{expenseDetailView.amount.toFixed(2)} ({expenseDetailView.currency})</div>
+                            <div><strong>Payer:</strong> {payerName(expenseDetailView.payerId)}</div>
+                            <div><strong>Type:</strong> {expenseDetailView.type}</div>
+                            {expenseDetailView.imageUrl && <div><a href={expenseDetailView.imageUrl} target="_blank" rel="noreferrer">View bill</a></div>}
+                            {expenseDetailView.createdAt && <div className="muted">Created: {new Date(expenseDetailView.createdAt).toLocaleString()}</div>}
+                          </div>
+                          {/* Expense Chat UI */}
+                          {expenseDetailView.groupId ? (
+                            <div className="expense-chat-panel" style={{ marginTop: '1.5rem', borderTop: '1px solid #333', paddingTop: '1rem' }}>
+                              <h3>Expense Chat</h3>
+                              <div className="expense-chat-messages" style={{ maxHeight: 200, overflowY: 'auto', marginBottom: '1rem', background: '#222', padding: '0.5rem', borderRadius: 6 }}>
+                                {(expenseChats[expenseDetailView.id] || []).length === 0 && <div className="muted">No messages yet.</div>}
+                                {(expenseChats[expenseDetailView.id] || []).map((msg, idx) => (
+                                  <div key={idx} style={{ marginBottom: 8 }}>
+                                    <span style={{ fontWeight: msg.user === currentUserName ? 'bold' : 'normal', color: msg.user === currentUserName ? '#6cf' : '#fff' }}>{msg.user}:</span> <span>{msg.message}</span>
+                                    <div className="muted" style={{ fontSize: '0.7rem' }}>{msg.timestamp}</div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <input
+                                  type="text"
+                                  value={expenseChatInputs[expenseDetailView.id] || ''}
+                                  onChange={e => setExpenseChatInputs(prev => ({ ...prev, [expenseDetailView.id]: e.target.value }))}
+                                  placeholder="Type a message..."
+                                  style={{ flex: 1 }}
+                                  onKeyDown={e => { if (e.key === 'Enter') handleSendExpenseChatMessage(expenseDetailView.id); }}
+                                />
+                                <button type="button" onClick={() => handleSendExpenseChatMessage(expenseDetailView.id)} disabled={!(expenseChatInputs[expenseDetailView.id]?.trim())}>Send</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="expense-chat-panel" style={{ marginTop: '1.5rem', borderTop: '1px solid #333', paddingTop: '1rem', color: '#f66' }}>
+                              <strong>Expense chat is only available for group expenses.</strong>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                 </ul>
               </section>
             </div>
@@ -2001,9 +2093,40 @@ function remainingPercentage(): number {
                 </button>
               )}
             </form>
+
+            {/* Expense Chat UI (only for editing existing expense) */}
+            {editingExpense && (
+              <div className="expense-chat-panel" style={{ marginTop: '2rem', borderTop: '1px solid #333', paddingTop: '1rem' }}>
+                <h3>Expense Chat</h3>
+                <div className="expense-chat-messages" style={{ maxHeight: 200, overflowY: 'auto', marginBottom: '1rem', background: '#222', padding: '0.5rem', borderRadius: 6 }}>
+                  {(expenseChats[editingExpense.id] || []).length === 0 && <div className="muted">No messages yet.</div>}
+                  {(expenseChats[editingExpense.id] || []).map((msg, idx) => (
+                    <div key={idx} style={{ marginBottom: 8 }}>
+                      <span style={{ fontWeight: msg.user === currentUserName ? 'bold' : 'normal', color: msg.user === currentUserName ? '#6cf' : '#fff' }}>{msg.user}:</span> <span>{msg.message}</span>
+                      <div className="muted" style={{ fontSize: '0.7rem' }}>{new Date(msg.timestamp).toLocaleTimeString()}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="text"
+                    value={expenseChatInputs[editingExpense.id] || ''}
+                    onChange={e => setExpenseChatInputs(prev => ({ ...prev, [editingExpense.id]: e.target.value }))}
+                    placeholder="Type a message..."
+                    style={{ flex: 1 }}
+                    onKeyDown={e => { if (e.key === 'Enter') handleSendExpenseChatMessage(editingExpense.id); }}
+                  />
+                  <button type="button" onClick={() => handleSendExpenseChatMessage(editingExpense.id)} disabled={!(expenseChatInputs[editingExpense.id]?.trim())}>Send</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
+
+
+      {/* Expense Detail Modal (top-level, always rendered) */}
+      {/* The modal code should be placed back to its previous location inside the main content, e.g., after the group and personal expenses lists, not at the very end. */}
     </div>
   )
 }

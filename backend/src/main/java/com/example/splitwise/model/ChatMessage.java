@@ -12,18 +12,19 @@ public class ChatMessage {
     private String senderId;
     private String message;
     private Instant timestamp;
+    private String expenseId;
 
     public ChatMessage() {}
 
-    public ChatMessage(String groupId, String senderId, String message, Instant timestamp) {
-        this.groupId = groupId;
-        this.senderId = senderId;
-        this.message = message;
-        this.timestamp = timestamp;
+    public ChatMessage(String groupId, String senderId, String message, Instant timestamp,String expenseId) {
+        this.groupId=groupId;
+        this.senderId=senderId;
+        this.message=message;
+        this.timestamp=timestamp;
+        this.expenseId=expenseId;
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public void setId(String id) { this.id=id; }
 
     public String getGroupId() { return groupId; }
     public void setGroupId(String groupId) { this.groupId = groupId; }
@@ -36,4 +37,11 @@ public class ChatMessage {
 
     public Instant getTimestamp() { return timestamp; }
     public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
+
+    public String getExpenseId(){
+        return expenseId;
+    }
+    public void setExpenseId(String expenseId){
+        this.expenseId=expenseId;
+    }
 }

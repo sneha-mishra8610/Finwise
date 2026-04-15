@@ -41,6 +41,7 @@ type Expense = {
   recurrenceEndDate?: string
   generatedFromRecurringId?: string
   recurrenceOccurrenceDate?: string
+  flaggedBy?: string[]
 }
 
 type Activity = {
@@ -98,14 +99,9 @@ function App() {
   const currentUser: User | null = users.find((u) => u.id === currentUserId) || null;
   const currentUserName = currentUser?.name || 'You';
 
-  // Expense chat fetch (needs groupId)
-  
-
-  // Expense chat send
   async function handleSendExpenseChatMessage(expenseId: string) {
     const input = expenseChatInputs[expenseId]?.trim();
     if (!input) return;
-    // Find groupId for this expense
     const exp = allGroupExpenses.find(e => e.id === expenseId) || personalExpenses.find(e => e.id === expenseId);
     const groupId = exp?.groupId;
     if (!groupId) return;
@@ -167,7 +163,6 @@ function App() {
   const [activityPage, setActivityPage] = useState(0)
   const [activityHasMore, setActivityHasMore] = useState(true)
 
-  // Expense detail modal state
   const [expenseDetailView, setExpenseDetailView] = useState<Expense | null>(null)
 
   const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem('authToken'))
@@ -210,7 +205,6 @@ function App() {
 
   const fetchExpenseChatMessages = useCallback(async (expenseId: string | null, groupId?: string | null) => {
     if (!expenseId) return;
-    // Try to find groupId if not provided
     let gid = groupId;
     if (!gid) {
       const exp = allGroupExpenses.find(e => e.id === expenseId) || personalExpenses.find(e => e.id === expenseId);
@@ -281,7 +275,6 @@ function App() {
     return () => { stopped = true; };
   }, [groupDetailView,fetchGroupChatMessages]);
 
-  // Poll expense chat when expense modal or detail modal is open
   useEffect(() => {
     const expense = editingExpense || expenseDetailView;
     if (!(showExpenseModal && editingExpense) && !expenseDetailView) return;
@@ -362,25 +355,25 @@ function App() {
     } catch { /* ignore */ }
   }
 
-  async function fetchGroupExpenses(groupId: string) {
+  const fetchGroupExpenses = React.useCallback(async (groupId: string) => {
     try {
       const res = await authedFetch(`${API_BASE}/expenses/group/${groupId}`)
       if (!res.ok) return
       const data = await res.json()
       setGroupExpenses(Array.isArray(data) ? data : [])
     } catch { /* ignore */ }
-  }
+  }, [authedFetch]);
 
-  async function fetchPersonalExpenses(userId: string) {
+  const fetchPersonalExpenses = React.useCallback(async (userId: string) => {
     try {
       const res = await authedFetch(`${API_BASE}/expenses/personal/${userId}`)
       if (!res.ok) return
       const data = await res.json()
       setPersonalExpenses(Array.isArray(data) ? data : [])
     } catch { /* ignore */ }
-  }
+  }, [authedFetch]);
 
-  async function fetchAllGroupExpenses() {
+  const fetchAllGroupExpenses = React.useCallback(async () => {
     try {
       const res = await authedFetch(`${API_BASE}/groups?userId=${currentUserId}`)
       if (!res.ok) return
@@ -395,7 +388,7 @@ function App() {
       }
       setAllGroupExpenses(allExps)
     } catch { /* ignore */ }
-  }
+  }, [authedFetch, currentUserId]);
 
   async function fetchActivities(userId: string, page = 0, append = false) {
     try {
@@ -463,6 +456,86 @@ function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGroupId])
+
+  // --- Flag/Unflag Expense Logic ---
+const refreshExpenseDetail = React.useCallback(async (expenseId: string) => {
+  let updated: Expense | undefined = allGroupExpenses.find((e: Expense) => e.id === expenseId) || personalExpenses.find((e: Expense) => e.id === expenseId);
+  if (!updated) {
+    try {
+      const res = await authedFetch(`${API_BASE}/expenses/${expenseId}`);
+      if (res.ok) {
+        updated = await res.json();
+      }
+    } catch {
+      // ignore error
+    }
+  }
+  if (updated) {
+    setExpenseDetailView(updated);
+    // Update in allGroupExpenses
+    setAllGroupExpenses(prev => {
+      const idx = prev.findIndex(e => e.id === expenseId);
+      if (idx !== -1) {
+        const copy = [...prev];
+        copy[idx] = updated!;
+        return copy;
+      }
+      return prev;
+    });
+    // Update in personalExpenses
+    setPersonalExpenses(prev => {
+      const idx = prev.findIndex(e => e.id === expenseId);
+      if (idx !== -1) {
+        const copy = [...prev];
+        copy[idx] = updated!;
+        return copy;
+      }
+      return prev;
+    });
+  }
+}, [allGroupExpenses, personalExpenses, authedFetch, setExpenseDetailView, setAllGroupExpenses, setPersonalExpenses]);
+
+const handleFlagExpense = React.useCallback(async (expenseId: string) => {
+  try {
+    const res = await authedFetch(`${API_BASE}/expenses/${expenseId}/flag?userId=${currentUserId}`, {
+      method: 'POST'
+    });
+    if (res.ok) {
+      await refreshExpenseDetail(expenseId);
+      // Also refresh the relevant expense list
+      const exp = allGroupExpenses.find(e => e.id === expenseId) || personalExpenses.find(e => e.id === expenseId);
+      if (exp?.groupId) {
+        await fetchGroupExpenses(exp.groupId);
+        await fetchAllGroupExpenses();
+      } else {
+        await fetchPersonalExpenses(currentUserId);
+      }
+    }
+  } catch {
+    // ignore error
+  }
+}, [authedFetch, currentUserId, refreshExpenseDetail, allGroupExpenses, personalExpenses, fetchAllGroupExpenses, fetchGroupExpenses, fetchPersonalExpenses]);
+
+const handleUnflagExpense = React.useCallback(async (expenseId: string) => {
+  try {
+    const res = await authedFetch(`${API_BASE}/expenses/${expenseId}/unflag?userId=${currentUserId}`, {
+      method: 'POST'
+    });
+    if (res.ok) {
+      await refreshExpenseDetail(expenseId);
+      // Also refresh the relevant expense list
+      const exp = allGroupExpenses.find(e => e.id === expenseId) || personalExpenses.find(e => e.id === expenseId);
+      if (exp?.groupId) {
+        await fetchGroupExpenses(exp.groupId);
+        await fetchAllGroupExpenses();
+      } else {
+        await fetchPersonalExpenses(currentUserId);
+      }
+    }
+  } catch {
+    // ignore error
+  }
+}, [authedFetch, currentUserId, refreshExpenseDetail, allGroupExpenses, personalExpenses, fetchAllGroupExpenses, fetchGroupExpenses, fetchPersonalExpenses]);
 
   async function handleAcceptGroupInvitation(invitationId: string) {
     try {
@@ -1013,12 +1086,6 @@ function remainingPercentage(): number {
   }
 
   const sortedGroups = [...filteredGroups].sort((a, b) => a.name.localeCompare(b.name))
-
-
-
-  // Handler for notifications button: fetch unsettled expenses for the current user
-  // Notification modal state
-  // Move these hooks to the top level, not inside any conditional
 
   async function handleShowNotifications() {
     if (!currentUserId) {
@@ -1571,6 +1638,12 @@ function remainingPercentage(): number {
                     <li key={e.id} className="card" style={{ cursor: 'pointer' }} onClick={() => setExpenseDetailView(e)}>
                       <div className="card-header">
                         <strong>{e.description}</strong>
+                        {e.flaggedBy && e.flaggedBy.length > 0 && (
+                          <span title={`Flagged by ${e.flaggedBy.length} participant${e.flaggedBy.length > 1 ? 's' : ''}`}
+                                style={{ color: 'orange', marginLeft: 8, fontSize: '1.1em', verticalAlign: 'middle' }}>
+                            🚩
+                          </span>
+                        )}
                         <div style={{ textAlign: 'right' }}>
                           <span>{getCurrencySymbol(e.currency)}{e.amount.toFixed(2)} ({e.currency})</span>
                           {e.createdAt && <div className="muted" style={{ fontSize: '.75rem' }}>{new Date(e.createdAt).toLocaleString()}</div>}
@@ -1610,6 +1683,12 @@ function remainingPercentage(): number {
                           <div className="card-header">
                             <div>
                               <strong>{e.description}</strong>
+                              {e.flaggedBy && e.flaggedBy.length > 0 && (
+                                <span title={`Flagged by ${e.flaggedBy.length} participant${e.flaggedBy.length > 1 ? 's' : ''}`}
+                                      style={{ color: 'orange', marginLeft: 8, fontSize: '1.1em', verticalAlign: 'middle' }}>
+                                  🚩
+                                </span>
+                              )}
                               <div className="muted" style={{ fontSize: '.75rem' }}>{grpName}</div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
@@ -1673,7 +1752,25 @@ function remainingPercentage(): number {
                             <div><strong>Type:</strong> {expenseDetailView.type}</div>
                             {expenseDetailView.imageUrl && <div><a href={expenseDetailView.imageUrl} target="_blank" rel="noreferrer">View bill</a></div>}
                             {expenseDetailView.createdAt && <div className="muted">Created: {new Date(expenseDetailView.createdAt).toLocaleString()}</div>}
+                            {expenseDetailView.flaggedBy && expenseDetailView.flaggedBy.length > 0 && (
+  <div style={{ color: 'orange', marginBottom: '0.5rem' }}>
+    ⚠️ This expense has been flagged by {expenseDetailView.flaggedBy.length} participant{expenseDetailView.flaggedBy.length > 1 ? 's' : ''}
+  </div>
+)}
                           </div>
+                          {expenseDetailView.createdBy !== currentUserId && (
+  <div style={{ margin: '1rem 0' }}>
+    {expenseDetailView.flaggedBy?.includes(currentUserId) ? (
+      <button onClick={() => handleUnflagExpense(expenseDetailView.id)}>
+        Unflag Expense
+      </button>
+    ) : (
+      <button onClick={() => handleFlagExpense(expenseDetailView.id)}>
+        Flag Expense
+      </button>
+    )}
+  </div>
+)}
                           {/* Expense Chat UI */}
                           {expenseDetailView.groupId ? (
                             <div className="expense-chat-panel" style={{ marginTop: '1.5rem', borderTop: '1px solid #333', paddingTop: '1rem' }}>

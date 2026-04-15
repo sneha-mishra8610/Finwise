@@ -5,12 +5,10 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.annotation.Id;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Document(collection = "expenses")
 public class Expense {
@@ -41,10 +39,20 @@ public class Expense {
     private String recurrenceType;
     private Integer recurrenceInterval;
     private Instant recurrenceEndDate;
+    private List<String> flaggedBy = new ArrayList<>();
 
     @JsonProperty("customSplits")
     @Field("customSplits")
     private Map<String,BigDecimal> customSplits;
+
+    public List<String> getFlaggedBy() {
+        if (flaggedBy == null) flaggedBy = new ArrayList<>();
+        return flaggedBy;
+    }
+
+    public void setFlaggedBy(List<String> getflaggedBy) {
+        this.flaggedBy=getflaggedBy;
+    }
 
     public String getId() {
         return id;

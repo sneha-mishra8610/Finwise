@@ -2,6 +2,7 @@ package com.example.splitwise.controller;
 
 import com.example.splitwise.model.Expense;
 import com.example.splitwise.service.ExpenseService;
+import com.example.splitwise.repository.ExpenseRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,8 @@ import com.example.splitwise.service.JwtService;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -19,10 +22,12 @@ public class ExpenseController {
 
     private final ExpenseService expenseService;
     private final JwtService jwtService;
+    private final ExpenseRepository expenseRepository;
 
-    public ExpenseController(ExpenseService expenseService,JwtService jwtService) {
+    public ExpenseController(ExpenseService expenseService,JwtService jwtService,ExpenseRepository expenseRepository) {
         this.expenseService = expenseService;
         this.jwtService=jwtService;
+        this.expenseRepository=expenseRepository;
     }
 
     @PutMapping("/{id}")
@@ -74,5 +79,46 @@ public class ExpenseController {
         expenseService.settleExpense(id, userId);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/{expenseId}/flag")
+    public ResponseEntity<?> flagExpense(
+        @PathVariable String expenseId,
+        @RequestParam String userId){
+            Optional<Expense> expense1=expenseRepository.findById(expenseId);
+            if(expense1.isEmpty())
+                return ResponseEntity.notFound().build();
+            Expense expense=expense1.get();
+            if(expense==null)
+                return ResponseEntity.notFound().build();
+            if(expense.getCreatedBy().equals(userId))
+                return ResponseEntity.badRequest().body("User cannot flag the expense they created");
+            if(expense.getFlaggedBy()==null)
+                expense.setFlaggedBy(new ArrayList<>());
+            if(!expense.getFlaggedBy().contains(userId)){
+                expense.getFlaggedBy().add(userId);
+                expenseRepository.save(expense);
+            }
+            return ResponseEntity.ok().build();
+        }
+
+        @PostMapping("/{expenseId}/unflag")
+    public ResponseEntity<?> unflagExpense(
+        @PathVariable String expenseId,
+        @RequestParam String userId){
+            Optional<Expense> expense1=expenseRepository.findById(expenseId);
+            if(expense1.isEmpty())
+                return ResponseEntity.notFound().build();
+            Expense expense=expense1.get();
+            if(expense==null)
+                return ResponseEntity.notFound().build();
+            if(expense.getCreatedBy().equals(userId))
+                return ResponseEntity.badRequest().body("User cannot unflag the expense they created");
+            if(expense.getFlaggedBy()!=null&&expense.getFlaggedBy().contains(userId)){
+                expense.getFlaggedBy().remove(userId);
+                expenseRepository.save(expense);
+            }
+            return ResponseEntity.ok().build();
+        }
+
 }
 

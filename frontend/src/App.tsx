@@ -1,3 +1,4 @@
+
 import './App.css'
 import React, { useEffect, useState, useCallback } from 'react'
 
@@ -79,6 +80,16 @@ function getCurrencySymbol(currency: string) {
 }
 
 function App() {
+    // ...existing code...
+
+    // ...existing code...
+
+  // ...existing code...
+  // ...existing code...
+
+  // Fetch expense edit logs when expense detail modal is opened (original placement)
+  const [editLogDisplayCount, setEditLogDisplayCount] = useState(3);
+
   const [currentUserId, setCurrentUserId] = useState<string>(() => localStorage.getItem('currentUserId') || '');
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [users, setUsers] = useState<User[]>([]);
@@ -98,7 +109,7 @@ function App() {
 
   const currentUser: User | null = users.find((u) => u.id === currentUserId) || null;
   const currentUserName = currentUser?.name || 'You';
-
+  
   async function handleSendExpenseChatMessage(expenseId: string) {
     const input = expenseChatInputs[expenseId]?.trim();
     if (!input) return;
@@ -249,7 +260,15 @@ function App() {
   const [recurrenceType, setRecurrenceType] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'CUSTOM'>('MONTHLY')
   const [recurrenceInterval, setRecurrenceInterval] = useState('1')
   const [recurrenceEndDate, setRecurrenceEndDate] = useState('')
-
+  type ExpenseEditLog = {
+    id?: string;
+    editedBy: string;
+    editTime: string;
+    oldValues: Record<string, unknown>;
+    newValues: Record<string, unknown>;
+    reason: string;
+  };
+  const [expenseEditLogs, setExpenseEditLogs] = useState<{ [expenseId: string]: ExpenseEditLog[] }>({});
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [settledExpenses, setSettledExpenses] = useState<Set<string>>(() => {
     try {
@@ -262,6 +281,10 @@ function App() {
 
   const [groupDetailView, setGroupDetailView] = useState<string | null>(null)
 
+    useEffect(() => {
+  setEditLogDisplayCount(3);
+  }, [expenseDetailView]);
+  
   useEffect(() => {
     if (!groupDetailView) return;
     let stopped = false;
@@ -335,6 +358,22 @@ function App() {
       }
     } catch { /* ignore */ }
   }, [authedFetch, currentUserId])
+
+  async function fetchExpenseEditLogs(expenseId: string) {
+  try {
+    const res = await authedFetch(`${API_BASE}/expense-edit-logs/${expenseId}`);
+    if (res.ok) {
+      const data = await res.json();
+      console.log("Fetched edit logs:", data);
+      setExpenseEditLogs(prev => ({ ...prev, [expenseId]: data }));
+    }
+  } catch { /* ignore */ }
+}
+React.useEffect(() => {
+    if (expenseDetailView) {
+      fetchExpenseEditLogs(expenseDetailView.id);
+    }
+  }, [expenseDetailView]);
 
   async function fetchGroups() {
     try {
@@ -1750,6 +1789,42 @@ function remainingPercentage(): number {
                             <div><strong>Amount:</strong> {getCurrencySymbol(expenseDetailView.currency)}{expenseDetailView.amount.toFixed(2)} ({expenseDetailView.currency})</div>
                             <div><strong>Payer:</strong> {payerName(expenseDetailView.payerId)}</div>
                             <div><strong>Type:</strong> {expenseDetailView.type}</div>
+                            {expenseDetailView && (
+  <section className="panel">
+    <h3>Edit History</h3>
+    {expenseEditLogs[expenseDetailView.id]?.length ? (
+      <>
+        <ul>
+          {expenseEditLogs[expenseDetailView.id]
+            .slice(0, editLogDisplayCount)
+            .map((log, idx) => (
+              <li key={log.id || idx}>
+                <div>
+                  <strong>{expenseDetailView.description}</strong> edited on {new Date(log.editTime).toLocaleString()}<br />
+                  Reason: {log.reason}
+                  <br />
+                  <details>
+                    <summary>Show changes</summary>
+                    {/* ...existing code for showing changes... */}
+                  </details>
+                </div>
+              </li>
+            ))}
+        </ul>
+        {expenseEditLogs[expenseDetailView.id].length > editLogDisplayCount && (
+          <button
+            style={{ float: 'right', marginTop: 8 }}
+            onClick={() => setEditLogDisplayCount(editLogDisplayCount + 3)}
+          >
+            See more
+          </button>
+        )}
+      </>
+    ) : (
+      <div className="muted" style={{ marginTop: 16 }}>No edits yet.</div>
+    )}
+  </section>
+)}
                             {expenseDetailView.imageUrl && <div><a href={expenseDetailView.imageUrl} target="_blank" rel="noreferrer">View bill</a></div>}
                             {expenseDetailView.createdAt && <div className="muted">Created: {new Date(expenseDetailView.createdAt).toLocaleString()}</div>}
                             {expenseDetailView.flaggedBy && expenseDetailView.flaggedBy.length > 0 && (

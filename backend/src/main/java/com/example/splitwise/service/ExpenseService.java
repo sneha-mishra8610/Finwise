@@ -5,6 +5,7 @@ import com.example.splitwise.model.Expense;
 import com.example.splitwise.repository.ActivityRepository;
 import com.example.splitwise.repository.ExpenseRepository;
 import com.example.splitwise.repository.UserRepository;
+import com.example.splitwise.service.ExpenseEditLogService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -25,12 +26,14 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final ActivityRepository activityRepository;
     private final UserRepository userRepository;
+    private final ExpenseEditLogService expenseEditLogService;
 
     public ExpenseService(ExpenseRepository expenseRepository, ActivityRepository activityRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,ExpenseEditLogService expenseEditLogService) {
         this.expenseRepository = expenseRepository;
         this.activityRepository = activityRepository;
         this.userRepository = userRepository;
+        this.expenseEditLogService=expenseEditLogService;
     }
 
     public Expense createExpense(Expense expense) {
@@ -53,6 +56,14 @@ public class ExpenseService {
         return saved;
     }
 
+    private Map<String, Object> extractExpenseFields(Expense expense) {
+    Map<String, Object> map = new HashMap<>();
+    map.put("description", expense.getDescription());
+    map.put("amount", expense.getAmount());
+    map.put("currency", expense.getCurrency());
+    return map;
+}
+
     public Expense updateExpense(Expense expense,String userId) {
         Expense existing=expenseRepository.findById(expense.getId())
         .orElseThrow(()->new IllegalArgumentException("Expense not found"));
@@ -63,9 +74,17 @@ public class ExpenseService {
         normalizeExpense(expense);
         validateRecurrence(expense);
         validateCustomSplits(expense);
-
+        Map<String, Object> oldValues = extractExpenseFields(existing);
+        Map<String, Object> newValues = extractExpenseFields(expense);
+        System.out.println("[DEBUG] Calling logEdit for expenseId=" + expense.getId() + ", userId=" + userId + ", oldValues=" + oldValues + ", newValues=" + newValues);
+        try {
+            expenseEditLogService.logEdit(expense.getId(),userId,oldValues,newValues,"Expense Updated");
+            System.out.println("[DEBUG] logEdit completed successfully.");
+        } catch (Exception e) {
+            System.out.println("[ERROR] logEdit failed: " + e.getMessage());
+            e.printStackTrace();
+        }
         Expense saved = expenseRepository.save(expense);
-
         return saved;
     }
 

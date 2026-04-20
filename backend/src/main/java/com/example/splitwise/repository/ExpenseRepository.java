@@ -2,6 +2,7 @@ package com.example.splitwise.repository;
 
 import com.example.splitwise.model.Expense;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 import java.time.Instant;
 import java.util.List;
@@ -19,6 +20,9 @@ public interface ExpenseRepository extends MongoRepository<Expense, String> {
 
     List<Expense> findByParticipantIdsContaining(String userId);
 
+    @Query("{'participantIds': { $all: [?0, ?1] }}")
+    List<Expense> findByBothParticipants(String id1, String id2);
+    
     List<Expense> findByIsRecurringTrueAndGeneratedFromRecurringIdIsNull();
 
     boolean existsByGeneratedFromRecurringIdAndRecurrenceOccurrenceDate(String generatedFromRecurringId, Instant recurrenceOccurrenceDate);

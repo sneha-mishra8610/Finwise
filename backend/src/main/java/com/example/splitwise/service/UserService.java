@@ -6,11 +6,18 @@ import com.example.splitwise.model.User;
 import com.example.splitwise.repository.ActivityRepository;
 import com.example.splitwise.repository.PendingInvitationRepository;
 import com.example.splitwise.repository.UserRepository;
+import com.example.splitwise.repository.ExpenseRepository;
+import com.example.splitwise.model.Expense;
+import com.example.splitwise.model.Expense.ExpenseStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class UserService {
@@ -18,12 +25,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final ActivityRepository activityRepository;
     private final PendingInvitationRepository pendingInvitationRepository;
+    private final ExpenseRepository expenseRepository;
 
     public UserService(UserRepository userRepository, ActivityRepository activityRepository,
-                       PendingInvitationRepository pendingInvitationRepository) {
+                       PendingInvitationRepository pendingInvitationRepository,ExpenseRepository expenseRepository) {
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
         this.pendingInvitationRepository = pendingInvitationRepository;
+        this.expenseRepository=expenseRepository;
     }
 
     public User createUser(User user) {
@@ -161,5 +170,43 @@ public class UserService {
         activityForFriend.setType(Activity.ActivityType.FRIEND_ADDED);
         activityForFriend.setDescription("You and " + user.getName() + " are now friends.");
         activityRepository.save(activityForFriend);
+    }
+
+    @Transactional
+public BigDecimal getUserFriendBalance(String friendId, String userId) {
+    BigDecimal balance = BigDecimal.ZERO;
+    List<Expense> expenses = expenseRepository.findByBothParticipants(friendId, userId);
+    for (Expense expense : expenses) {
+        if (expense.getExpenseStatus() == ExpenseStatus.Settled)
+            continue;
+        if (expense.getPayerId().equals(userId)
+                && expense.getSettledByUser() != null
+                && !Boolean.TRUE.equals(expense.getSettledByUser().get(friendId))) {
+            BigDecimal share = expense.getCustomSplits() != null && expense.getCustomSplits().containsKey(friendId)
+                    ? expense.getCustomSplits().get(friendId)
+                    : expense.getAmount().divide(BigDecimal.valueOf(expense.getParticipantIds().size()), 2, RoundingMode.HALF_UP);
+            balance = balance.add(share);
+        }
+        if (expense.getPayerId().equals(friendId)
+                && expense.getSettledByUser() != null
+                && !Boolean.TRUE.equals(expense.getSettledByUser().get(userId))) {
+            BigDecimal share = expense.getCustomSplits() != null && expense.getCustomSplits().containsKey(userId)
+                    ? expense.getCustomSplits().get(userId)
+                    : expense.getAmount().divide(BigDecimal.valueOf(expense.getParticipantIds().size()), 2, RoundingMode.HALF_UP);
+            balance = balance.subtract(share);
+        }
+    }
+    return balance;
+}
+
+    @Transactional
+    public Map<String, BigDecimal> getAllFriendBalances(String userId) {
+    User user = userRepository.findById(userId).orElseThrow();
+    Map<String, BigDecimal> balances = new HashMap<>();
+    for (String friendId : user.getFriendIds()) {
+        BigDecimal balance = getUserFriendBalance(friendId,userId);
+        balances.put(friendId, balance);
+    }
+    return balances;
     }
 }

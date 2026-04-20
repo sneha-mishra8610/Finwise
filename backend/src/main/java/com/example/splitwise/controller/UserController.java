@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -86,6 +87,12 @@ public class UserController {
     @DeleteMapping("/friend-invitations/{invitationId}")
     public ResponseEntity<Void> declineFriendInvitation(@PathVariable("invitationId") String invitationId) {
         userService.declineFriendInvitation(invitationId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/balances/{userId}/{friendId}")
+    public ResponseEntity<Void> getUserFriendBalance(@PathVariable String userId, @PathVariable String friendId) {
+        userService.getUserFriendBalance(friendId, userId);
         return ResponseEntity.ok().build();
     }
 }

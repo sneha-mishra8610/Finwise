@@ -88,14 +88,6 @@ function getCurrencySymbol(currency: string) {
 }
 
 function App() {
-    // ...existing code...
-
-    // ...existing code...
-
-  // ...existing code...
-  // ...existing code...
-
-  // Fetch expense edit logs when expense detail modal is opened (original placement)
   const [editLogDisplayCount, setEditLogDisplayCount] = useState(3);
 
   const [currentUserId, setCurrentUserId] = useState<string>(() => localStorage.getItem('currentUserId') || '');
@@ -345,6 +337,8 @@ function App() {
 
   const isAuthenticated = !!authToken
 
+  const [friendBalances, setFriendBalances] = useState<{ [friendId: string]: number }>({});
+
   useEffect(() => {
     localStorage.setItem('theme', theme)
   }, [theme])
@@ -380,6 +374,14 @@ React.useEffect(() => {
       fetchExpenseEditLogs(expenseDetailView.id);
     }
   }, [expenseDetailView, fetchExpenseEditLogs]);
+
+  async function fetchFriendBalances() {
+  if (!currentUserId) return;
+  const res = await authedFetch(`${API_BASE}/users/${currentUserId}/friend-balances`);
+  if (res.ok) {
+    setFriendBalances(await res.json());
+  }
+}
 
   async function fetchGroups() {
     try {
@@ -1323,6 +1325,7 @@ async function handleSettleUp(expenseId: string) {
           {/* ── Friends tab ── */}
           {activeTab === 'Friends' && (
             <>
+            
               <section className="panel">
                 <h2>Add Friend</h2>
                 <form onSubmit={handleAddFriend} className="form-inline-row">
@@ -1392,21 +1395,40 @@ async function handleSettleUp(expenseId: string) {
                   <p className="muted">No friends yet — add someone above!</p>
                 ) : (
                   <ul className="card-list">
-                    {currentFriends.map((f) => (
-                      <li key={f.id} className="card friend-card">
-                        <div className="card-header">
-                          <div>
-                            <strong>{f.name}</strong>
-                            <span className="muted" style={{ marginLeft: '0.5rem' }}>{f.email}</span>
-                          </div>
-                          <div className="card-actions">
-                            <button className="icon-btn" title="Edit" onClick={() => startEditFriend(f)}>✏️</button>
-                            <button className="icon-btn danger" title="Remove" onClick={() => handleRemoveFriend(f.id)}>🗑️</button>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+  {currentFriends.map((f) => (
+    <li key={f.id} className="card friend-card">
+      <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <strong>{f.name}</strong>
+          <span className="muted" style={{ marginLeft: '0.5rem' }}>{f.email}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Balance */}
+          <span style={{
+            minWidth: 90,
+            textAlign: 'right',
+            color: friendBalances[f.id] > 0 ? 'green' : friendBalances[f.id] < 0 ? 'red' : 'gray'
+          }}>
+            {friendBalances[f.id] > 0
+              ? `Owes you ₹${friendBalances[f.id]}`
+              : friendBalances[f.id] < 0
+              ? `You owe ₹${-friendBalances[f.id]}`
+              : 'Settled'}
+          </span>
+          {/* Action button */}
+          {friendBalances[f.id] < 0 ? (
+            <button className="icon-btn" style={{ color: 'red' }}>Settle</button>
+          ) : friendBalances[f.id] > 0 ? (
+            <button className="icon-btn" style={{ color: 'green' }}>Remind</button>
+          ) : null}
+          {/* Edit and delete icons/buttons */}
+          <button className="icon-btn" title="Edit" onClick={() => startEditFriend(f)}>✏️</button>
+          <button className="icon-btn danger" title="Remove" onClick={() => handleRemoveFriend(f.id)}>🗑️</button>
+        </div>
+      </div>
+    </li>
+  ))}
+</ul>
                 )}
               </section>
 

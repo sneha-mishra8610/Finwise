@@ -497,6 +497,12 @@ useEffect(() => {
   // eslint-disable-next-line
 }, [activeTab, isAuthenticated, currentUserId])
 
+useEffect(() => {
+  if (activeTab === 'Friends' && isAuthenticated && currentUserId) {
+    fetchFriendBalances();
+  }
+}, [activeTab, isAuthenticated, currentUserId]);
+
   useEffect(() => {
     if (authToken) {
       const load = async () => { await fetchUsers() }
@@ -887,6 +893,7 @@ const handleUnflagExpense = React.useCallback(async (expenseId: string) => {
       }
       await fetchAllGroupExpenses()
       await fetchActivities(currentUserId)
+      await fetchFriendBalances();
     }
     
   }
@@ -1000,6 +1007,7 @@ async function handleSettleUp(expenseId: string) {
   await fetchPersonalExpenses(currentUserId);
   await fetchAllGroupExpenses();
   await fetchDashboardSummary();
+  await fetchFriendBalances();
 }
 
   const filteredGroups = groups.filter((g) =>
@@ -1417,9 +1425,19 @@ async function handleSettleUp(expenseId: string) {
           </span>
           {/* Action button */}
           {friendBalances[f.id] < 0 ? (
-            <button className="icon-btn" style={{ color: 'red' }}>Settle</button>
+          <button
+          className="icon-btn"
+          style={{ color: 'red' }}
+          onClick={async () => {
+          await authedFetch(`${API_BASE}/expenses/settle-with-friend?userId=${currentUserId}&friendId=${f.id}`, { method: 'POST' });
+          await fetchFriendBalances();
+          await fetchActivities(currentUserId);
+          }}
+          >
+          Settle
+          </button>
           ) : friendBalances[f.id] > 0 ? (
-            <button className="icon-btn" style={{ color: 'green' }}>Remind</button>
+          <button className="icon-btn" style={{ color: 'green' }}>Remind</button>
           ) : null}
           {/* Edit and delete icons/buttons */}
           <button className="icon-btn" title="Edit" onClick={() => startEditFriend(f)}>✏️</button>

@@ -25,7 +25,7 @@ public class ExpenseController {
     private final ExpenseRepository expenseRepository;
 
     public ExpenseController(ExpenseService expenseService,JwtService jwtService,ExpenseRepository expenseRepository) {
-        this.expenseService = expenseService;
+        this.expenseService=expenseService;
         this.jwtService=jwtService;
         this.expenseRepository=expenseRepository;
     }
@@ -120,5 +120,13 @@ public class ExpenseController {
             return ResponseEntity.ok().build();
         }
 
+        @PostMapping("/settle-with-friend")
+         public ResponseEntity<Void> settleWithFriend(
+                                     @RequestParam String userId,
+                                     @RequestParam String friendId
+                                    ) {
+                                       expenseService.settleAllWithFriend(userId, friendId);
+                                       return ResponseEntity.ok().build();
+                                    }
 }
 

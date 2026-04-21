@@ -91,9 +91,14 @@ public class UserController {
     }
 
     @GetMapping("/balances/{userId}/{friendId}")
-    public ResponseEntity<Void> getUserFriendBalance(@PathVariable String userId, @PathVariable String friendId) {
-        userService.getUserFriendBalance(friendId, userId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<BigDecimal> getUserFriendBalance(@PathVariable String userId, @PathVariable String friendId) {
+        BigDecimal balance=userService.getUserFriendBalance(friendId, userId);
+        return ResponseEntity.ok(balance);
+    }
+
+    @GetMapping("/{userId}/friend-balances")
+    public ResponseEntity<Map<String, BigDecimal>> getAllFriendBalances(@PathVariable String userId) {
+    return ResponseEntity.ok(userService.getAllFriendBalances(userId));
     }
 }
 

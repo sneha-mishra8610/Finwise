@@ -434,6 +434,23 @@ public void settleExpense(String expenseId, String settlingUserId) {
         for (String pid : participants) {
             splits.put(pid, equalShare);
         }
-        return splits;
+        return splits;   
+    }
+
+    public void settleAllWithFriend(String userId, String friendId) {
+    List<Expense> expenses = expenseRepository.findByBothParticipants(userId, friendId);
+    for (Expense expense : expenses) {
+    if (expense.getSettledByUser() == null) continue;
+    if (!expense.getPayerId().equals(userId) && expense.getParticipantIds().contains(userId)) {
+        if (!Boolean.TRUE.equals(expense.getSettledByUser().get(userId))) {
+            expense.getSettledByUser().put(userId, true);
+            boolean allSettled = expense.getParticipantIds().stream()
+                .filter(pid -> !pid.equals(expense.getPayerId()))
+                .allMatch(pid -> Boolean.TRUE.equals(expense.getSettledByUser().get(pid)));
+            expense.setExpenseStatus(allSettled ? Expense.ExpenseStatus.Settled : Expense.ExpenseStatus.Unsettled);
+            expenseRepository.save(expense);
+        }
+    }
+    }
     }
 }

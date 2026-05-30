@@ -3,6 +3,7 @@ package com.example.splitwise.repository;
 import java.util.Optional;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import com.example.splitwise.model.Notification;
 
@@ -11,5 +12,11 @@ public interface NotificationRepository extends MongoRepository<Notification,Str
     Optional<Notification> findTopByUserIdAndExpenseIdOrderByLastSentDesc(String userId, String expenseId);
 
     List<Notification> findByUserIdOrderByLastSentDesc(String userId);
+
+    List<Notification> findByUserIdAndReadFalseOrderByLastSentDesc(String userId);
+
+    List<Notification> findByUserIdAndReadTrueOrderByLastSentDesc(String userId, Pageable pageable);
+
+    long countByUserIdAndReadTrue(String userId);
     
 }

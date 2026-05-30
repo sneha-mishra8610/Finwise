@@ -301,9 +301,13 @@ function App() {
   const [editProfileSuccess, setEditProfileSuccess] = useState('');
   const [editProfileLoading, setEditProfileLoading] = useState(false);
   
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState<AppNotification[]>([]);
+  const [readNotifications, setReadNotifications] = useState<AppNotification[]>([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [notificationError, setNotificationError] = useState('');
+  const [readNotificationsPage, setReadNotificationsPage] = useState(0)
+  const [hasMoreReadNotifications, setHasMoreReadNotifications] = useState(false)
+  const [loadingMoreReadNotifications, setLoadingMoreReadNotifications] = useState(false)
   const [expensesPage, setExpensesPage] = useState(1);
   const EXPENSES_PAGE_SIZE = 10;
   const WORKSPACE_EXPENSES_PAGE_SIZE = 10;
@@ -1603,10 +1607,24 @@ async function handleSettleUp(expenseId: string) {
 }
 
 async function handleRemindFriend(friendId: string) {
-  if (!currentUserId) return
+  if (!currentUserId) {
+    console.warn('[remind] currentUserId is missing, skipping request', { friendId })
+    return
+  }
+  const url = `${API_BASE}/expenses/remind-with-friend?userId=${currentUserId}&friendId=${friendId}`
+  console.info('[remind] sending request', { url, userId: currentUserId, friendId })
   try {
-    await authedFetch(`${API_BASE}/expenses/remind-with-friend?userId=${currentUserId}&friendId=${friendId}`, { method: 'POST' })
-  } catch { /* ignore */ }
+    const response = await authedFetch(url, { method: 'POST' })
+    const responseText = await response.text().catch(() => '')
+    console.info(
+      `[remind] response received status=${response.status} ok=${response.ok} body=${responseText || '<empty>'}`
+    )
+    if (!response.ok) {
+      console.error(`[remind] request failed status=${response.status} body=${responseText || '<empty>'}`)
+    }
+  } catch (error) {
+    console.error('[remind] request threw an error', error)
+  }
   await fetchActivities(currentUserId)
 }
 
@@ -2740,17 +2758,57 @@ async function handleRemindFriend(friendId: string) {
       setNotificationError('No user selected.')
       return
     }
-    void fetchNotifications(true)
+    void fetchNotifications(true, true)
   }
 
-  const fetchNotifications = useCallback(async (showSpinner = false) => {
+  const markNotificationsAsRead = useCallback(async (ids: string[]) => {
+    if (!currentUserId || !ids.length) return
+    try {
+      await authedFetch(`${API_BASE}/notifications/${currentUserId}/mark-read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ids),
+      })
+    } catch {
+      // best effort
+    }
+  }, [authedFetch, currentUserId])
+
+  const fetchReadNotificationsPage = useCallback(async (page: number, append: boolean) => {
+    if (!currentUserId) return
+    if (append) setLoadingMoreReadNotifications(true)
+    try {
+      const res = await authedFetch(`${API_BASE}/notifications/${currentUserId}/read?page=${page}&size=10`)
+      if (!res.ok) return
+      const data = await res.json()
+      const items = Array.isArray(data?.items) ? data.items : []
+      const hasMore = Boolean(data?.hasMore)
+      setHasMoreReadNotifications(hasMore)
+      setReadNotificationsPage(page)
+      if (append) {
+        setReadNotifications(prev => [...prev, ...items])
+      } else {
+        setReadNotifications(items)
+      }
+    } catch {
+      // ignore for better UX
+    } finally {
+      if (append) setLoadingMoreReadNotifications(false)
+    }
+  }, [authedFetch, currentUserId])
+
+  const fetchNotifications = useCallback(async (showSpinner = false, resetRead = false) => {
     if (!currentUserId) return
     if (showSpinner) setLoadingNotifications(true)
     try {
-      const res = await authedFetch(`${API_BASE}/notifications/${currentUserId}?preferredCurrency=${encodeURIComponent(defaultCurrency)}`)
+      const res = await authedFetch(`${API_BASE}/notifications/${currentUserId}/unread?preferredCurrency=${encodeURIComponent(defaultCurrency)}`)
       if (res.ok) {
         const data = await res.json()
-        setNotifications(Array.isArray(data) ? data : [])
+        const unread = Array.isArray(data) ? data : []
+        setUnreadNotifications(unread)
+        if (resetRead) {
+          await fetchReadNotificationsPage(0, false)
+        }
         setNotificationError('')
       } else {
         let details = ''
@@ -2772,16 +2830,37 @@ async function handleRemindFriend(friendId: string) {
     } finally {
       if (showSpinner) setLoadingNotifications(false)
     }
-  }, [authedFetch, currentUserId, defaultCurrency])
+  }, [authedFetch, currentUserId, defaultCurrency, fetchReadNotificationsPage, markNotificationsAsRead])
+
+  const handleLoadMoreReadNotifications = useCallback(() => {
+    if (loadingMoreReadNotifications || !hasMoreReadNotifications) return
+    void fetchReadNotificationsPage(readNotificationsPage + 1, true)
+  }, [fetchReadNotificationsPage, hasMoreReadNotifications, loadingMoreReadNotifications, readNotificationsPage])
 
   useEffect(() => {
     if (!currentUserId) {
-      setNotifications([])
+      setUnreadNotifications([])
+      setReadNotifications([])
       setNotificationError('')
       return
     }
-    void fetchNotifications(false)
+    void fetchNotifications(false, true)
   }, [currentUserId, defaultCurrency, fetchNotifications])
+
+  useEffect(() => {
+    if (!showNotifications || unreadNotifications.length === 0) return
+    const unreadIds = unreadNotifications.filter(n => n?.id && !n.read).map(n => n.id)
+    if (unreadIds.length === 0) return
+
+    const timer = setTimeout(() => {
+      const moved = unreadNotifications.map(n => ({ ...n, read: true }))
+      setReadNotifications(prev => [...moved, ...prev])
+      setUnreadNotifications([])
+      void markNotificationsAsRead(unreadIds)
+    }, 900)
+
+    return () => clearTimeout(timer)
+  }, [showNotifications, unreadNotifications, markNotificationsAsRead])
 
   return (
     <div className={`app ${theme === 'light' ? 'light-mode' : ''}`}>
@@ -2819,6 +2898,11 @@ async function handleRemindFriend(friendId: string) {
             title="Notifications"
           >
             🔔
+            {unreadNotifications.length > 0 && (
+              <span style={{ marginLeft: 6, color: '#d92d20', fontWeight: 700 }}>
+                {unreadNotifications.length}
+              </span>
+            )}
           </button>
           <button onClick={() => { localStorage.removeItem('authToken'); localStorage.removeItem('currentUserId'); setAuthToken(null); setCurrentUserId('') }}>Log out</button>
         </div>
@@ -2836,23 +2920,63 @@ async function handleRemindFriend(friendId: string) {
               <div>Loading...</div>
             ) : notificationError ? (
               <div className="error-text">{notificationError}</div>
-            ) : notifications.length === 0 ? (
+            ) : unreadNotifications.length === 0 && readNotifications.length === 0 ? (
               <div>No notifications available.</div>
             ) : (
-              <ul className="card-list" style={{ maxHeight: 300, overflowY: 'auto' }}>
-                {notifications.map((notification) => (
-                  <li key={notification.id} className="card" style={{ marginBottom: 12 }}>
-                    <strong>{notification.type === 'OWED' ? 'You are owed' : 'You owe'}</strong><br />
-                    {notification.message}
-                    <br />
-                    <span className="muted">
-                      {notification.createdAt
-                        ? new Date(notification.createdAt).toLocaleString()
-                        : 'Recently'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+                {unreadNotifications.length > 0 && (
+                  <>
+                    <div style={{ fontWeight: 700, marginBottom: 8 }}>Unread</div>
+                    <ul className="card-list" style={{ marginBottom: 12 }}>
+                      {unreadNotifications.map((notification, index) => (
+                        <li
+                          key={notification.id ?? `${notification.type}-${notification.expenseId ?? 'expense'}-${notification.lastSent || notification.createdAt || 'recent'}-${index}`}
+                          className="card"
+                          style={{ marginBottom: 12, borderLeft: '4px solid #2563eb', background: '#eef4ff' }}
+                        >
+                          <strong>{notification.type === 'OWED' ? 'You are owed' : 'You owe'}</strong><br />
+                          {notification.message}
+                          <br />
+                          <span className="muted">
+                            {(notification.lastSent || notification.createdAt)
+                              ? new Date(notification.lastSent || notification.createdAt as string).toLocaleString()
+                              : 'Recently'}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                {readNotifications.length > 0 && (
+                  <>
+                    <div style={{ fontWeight: 700, marginBottom: 8 }}>Read</div>
+                    <ul className="card-list" style={{ marginBottom: 12 }}>
+                      {readNotifications.map((notification, index) => (
+                        <li key={notification.id ?? `${notification.type}-${notification.expenseId ?? 'expense'}-${notification.lastSent || notification.createdAt || 'recent'}-${index}`} className="card" style={{ marginBottom: 12, opacity: 0.85 }}>
+                          <strong>{notification.type === 'OWED' ? 'You are owed' : 'You owe'}</strong><br />
+                          {notification.message}
+                          <br />
+                          <span className="muted">
+                            {(notification.lastSent || notification.createdAt)
+                              ? new Date(notification.lastSent || notification.createdAt as string).toLocaleString()
+                              : 'Recently'}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    {hasMoreReadNotifications && (
+                      <button
+                        className="icon-btn"
+                        onClick={handleLoadMoreReadNotifications}
+                        disabled={loadingMoreReadNotifications}
+                      >
+                        {loadingMoreReadNotifications ? 'Loading...' : 'Load more'}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             )}
             <button className="icon-btn" style={{ marginTop: 16 }} onClick={() => setShowNotifications(false)}>Close</button>
           </div>

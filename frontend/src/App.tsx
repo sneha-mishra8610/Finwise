@@ -9,7 +9,9 @@ import ExpensesPage from './pages/ExpensesPage'
 import FriendsPage from './pages/FriendsPage'
 import GroupsPage from './pages/GroupsPage'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD
+  ? 'https://splitwise-clone-gxkq.onrender.com/api'
+  : 'http://localhost:8080/api')
 
 const EXPENSE_CATEGORIES = [
   'groceries',
@@ -465,6 +467,8 @@ function App() {
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [loginError, setLoginError] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
+  const [signupLoading, setSignupLoading] = useState(false)
   const [signupError, setSignupError] = useState('')
   const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([])
   const [groupInvitations, setGroupInvitations] = useState<PendingInvitation[]>([])
@@ -946,6 +950,7 @@ function App() {
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault(); setSignupError('')
+    setSignupLoading(true)
     try {
       const res = await fetch(`${API_BASE}/auth/signup`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -960,10 +965,12 @@ function App() {
         setSignupError(res.status === 409 ? 'User with this email already exists' : 'Signup failed')
       }
     } catch { setSignupError('Could not reach server') }
+    finally { setSignupLoading(false) }
   }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault(); setLoginError('')
+    setLoginLoading(true)
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -978,6 +985,7 @@ function App() {
         setLoginError(res.status === 401 ? 'Invalid email or password' : 'Login failed')
       }
     } catch { setLoginError('Could not reach server') }
+    finally { setLoginLoading(false) }
   }
 
   // ── Expense handlers ──────────────────────────────────────────────────────
@@ -1813,9 +1821,11 @@ function App() {
           signupName={signupName} signupEmail={signupEmail} signupPassword={signupPassword}
           setSignupName={setSignupName} setSignupEmail={setSignupEmail} setSignupPassword={setSignupPassword}
           signupError={signupError}
+          signupLoading={signupLoading}
           loginEmail={loginEmail} loginPassword={loginPassword}
           setLoginEmail={setLoginEmail} setLoginPassword={setLoginPassword}
           loginError={loginError}
+          loginLoading={loginLoading}
           onSignupSubmit={handleSignup}
           onLoginSubmit={handleLogin}
         />

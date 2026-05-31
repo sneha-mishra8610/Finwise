@@ -2,6 +2,7 @@ package com.example.splitwise.controller;
 
 import com.example.splitwise.model.Expense;
 import com.example.splitwise.service.ExpenseService;
+import com.example.splitwise.service.NotificationService;
 import com.example.splitwise.repository.ExpenseRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +22,13 @@ import java.util.Optional;
 public class ExpenseController {
 
     private final ExpenseService expenseService;
+    private final NotificationService notificationService;
     private final JwtService jwtService;
     private final ExpenseRepository expenseRepository;
 
-    public ExpenseController(ExpenseService expenseService,JwtService jwtService,ExpenseRepository expenseRepository) {
+    public ExpenseController(ExpenseService expenseService, NotificationService notificationService, JwtService jwtService, ExpenseRepository expenseRepository) {
         this.expenseService=expenseService;
+        this.notificationService = notificationService;
         this.jwtService=jwtService;
         this.expenseRepository=expenseRepository;
     }
@@ -130,12 +133,11 @@ public class ExpenseController {
                                     }
 
         @PostMapping("/remind-with-friend")
-        public ResponseEntity<Map<String, Integer>> remindWithFriend(
+                public ResponseEntity<Map<String, Object>> remindWithFriend(
                                     @RequestParam String userId,
                                     @RequestParam String friendId
                                     ) {
-                                      int sent = expenseService.sendReminderToFriend(userId, friendId);
-                                      return ResponseEntity.ok(Map.of("sent", sent));
+                                                                            return ResponseEntity.ok(notificationService.sendReminderToFriend(userId, friendId));
                                     }
 }
 

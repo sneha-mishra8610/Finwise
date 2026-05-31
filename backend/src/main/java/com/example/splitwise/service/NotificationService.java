@@ -15,18 +15,26 @@ import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.splitwise.model.Expense;
 import com.example.splitwise.model.Notification;
+import com.example.splitwise.model.Activity;
 import com.example.splitwise.model.User;
 import com.example.splitwise.repository.ExpenseRepository;
 import com.example.splitwise.repository.NotificationRepository;
+import com.example.splitwise.repository.ActivityRepository;
 import com.example.splitwise.repository.UserRepository;
 
 @Service
 public class NotificationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
     @Autowired
     private ExpenseRepository expenseRepository;
@@ -39,6 +47,9 @@ public class NotificationService {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private ActivityRepository activityRepository;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private volatile Map<String, Object> cachedExchangeRates = new ConcurrentHashMap<>();
@@ -155,8 +166,11 @@ public class NotificationService {
                                     ),
                                     now
                             );
-                            responseNotifications.add(n);
-                            addedExpenseIds.add(e.getId());
+                            try {
+                                Notification savedNotification = notificationRepository.save(n);
+                                responseNotifications.add(savedNotification);
+                                addedExpenseIds.add(e.getId());
+                            } catch (Exception ignored) { }
                             
                         } catch (Exception ignored) {
                             
@@ -200,10 +214,10 @@ public class NotificationService {
                                     ),
                                     now
                             );
-                            responseNotifications.add(n);
-                            addedExpenseIds.add(e.getId());
                             try {
-                                notificationRepository.save(n);
+                                Notification savedNotification = notificationRepository.save(n);
+                                responseNotifications.add(savedNotification);
+                                addedExpenseIds.add(e.getId());
                             } catch (Exception ignored) { }
                         } catch (Exception ignored) {
                             
@@ -239,6 +253,123 @@ public class NotificationService {
         return merged;
     }
 
+    public List<Notification> getUnreadNotifications(String userId, String preferredCurrency) {
+        List<Notification> merged = getScheduledNotifications(userId, preferredCurrency);
+        List<Notification> unread = new ArrayList<>();
+        for (Notification n : merged) {
+            if (n != null && !n.isRead()) {
+                unread.add(n);
+            }
+        }
+        unread.sort(Comparator.comparing(this::notificationInstant).reversed());
+        return unread;
+    }
+
+    public List<Notification> getReadNotifications(String userId, int page, int size) {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, Math.min(size, 50));
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+        return notificationRepository.findByUserIdAndReadTrueOrderByLastSentDesc(userId, pageable);
+    }
+
+    public Map<String, Object> sendReminderToFriend(String userId, String friendId) {
+        List<Expense> expenses = expenseRepository.findByBothParticipants(userId, friendId);
+        logger.info("[sendReminderToFriend] userId={}, friendId={}, found {} expenses", userId, friendId, expenses.size());
+        String payerName = userRepository.findById(userId).map(u -> u.getName()).orElse("Someone");
+        Instant now = Instant.now();
+        int sentCount = 0;
+        List<String> notificationIds = new ArrayList<>();
+
+        for (Expense expense : expenses) {
+            logger.info("[sendReminderToFriend] Checking expenseId={}, payerId={}, participants={}, status={}, settledByUser={}",
+                    expense.getId(), expense.getPayerId(), expense.getParticipantIds(), expense.getExpenseStatus(), expense.getSettledByUser());
+            if (!userId.equals(expense.getPayerId())) {
+                logger.info("[sendReminderToFriend] Skipping expense {}: user is not payer", expense.getId());
+                continue;
+            }
+            if (expense.getParticipantIds() == null || !expense.getParticipantIds().contains(friendId)) {
+                logger.info("[sendReminderToFriend] Skipping expense {}: friend not a participant", expense.getId());
+                continue;
+            }
+            if (expense.getExpenseStatus() == Expense.ExpenseStatus.Settled) {
+                logger.info("[sendReminderToFriend] Skipping expense {}: already settled", expense.getId());
+                continue;
+            }
+            if (Boolean.TRUE.equals(expense.getSettledByUser() != null ? expense.getSettledByUser().get(friendId) : null)) {
+                logger.info("[sendReminderToFriend] Skipping expense {}: friend already settled", expense.getId());
+                continue;
+            }
+
+            BigDecimal owedAmount = expenseService.getOwedAmount(expense, friendId);
+            if (owedAmount == null || owedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                logger.info("[sendReminderToFriend] Skipping expense {}: owedAmount is zero or negative", expense.getId());
+                continue;
+            }
+
+            String expenseCurrency = expense.getCurrency() == null || expense.getCurrency().isBlank()
+                    ? "INR"
+                    : expense.getCurrency().toUpperCase();
+            String normalizedAmount = owedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString();
+            String message = "Reminder: You owe " + payerName + " " + expenseCurrency + " " + normalizedAmount
+                    + " for \"" + expense.getDescription() + "\".";
+
+            Notification notification = new Notification(friendId, expense.getId(), Notification.Type.OWE, message, now);
+            Notification savedNotification = notificationRepository.save(notification);
+            notificationIds.add(savedNotification.getId());
+            logger.info("[sendReminderToFriend] Notification created for friendId={}, expenseId={}", friendId, expense.getId());
+            try {
+                if (activityRepository != null && !activityRepository.existsByRelatedExpenseIdAndUserIdAndType(expense.getId(), friendId, Activity.ActivityType.EXPENSE_OWED)) {
+                    Activity a = new Activity();
+                    a.setUserId(friendId);
+                    a.setType(Activity.ActivityType.EXPENSE_OWED);
+                    a.setRelatedExpenseId(expense.getId());
+                    a.setDescription("You owe " + expenseCurrency + " " + normalizedAmount + " to " + payerName + " for \"" + expense.getDescription() + "\".");
+                    activityRepository.save(a);
+                    logger.info("[sendReminderToFriend] Activity created for friendId={}, expenseId={}", friendId, expense.getId());
+                }
+            } catch (Exception ex) {
+                logger.warn("[sendReminderToFriend] Failed to create activity for friendId={}, expenseId={}, ex={}", friendId, expense.getId(), ex.getMessage());
+            }
+            sentCount++;
+        }
+
+        logger.info("[sendReminderToFriend] Total reminders sent: {}", sentCount);
+        Map<String, Object> result = new HashMap<>();
+        result.put("sent", sentCount);
+        result.put("notificationIds", notificationIds);
+        return result;
+    }
+
+    public long countReadNotifications(String userId) {
+        return notificationRepository.countByUserIdAndReadTrue(userId);
+    }
+
+    public void markNotificationsRead(String userId, List<String> notificationIds) {
+        if (userId == null || userId.isBlank() || notificationIds == null || notificationIds.isEmpty()) {
+            return;
+        }
+        for (String notificationId : notificationIds) {
+            if (notificationId == null || notificationId.isBlank()) {
+                continue;
+            }
+            try {
+                Optional<Notification> notificationOpt = notificationRepository.findById(notificationId);
+                if (notificationOpt.isEmpty()) {
+                    continue;
+                }
+                Notification notification = notificationOpt.get();
+                if (!userId.equals(notification.getUserId())) {
+                    continue;
+                }
+                if (!notification.isRead()) {
+                    notification.setRead(true);
+                    notificationRepository.save(notification);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
     private void appendFallbackOverdueNotifications(
             String userId,
             int delay,
@@ -270,8 +401,12 @@ public class NotificationService {
                                 convertedAmount,
                                 preferredCurrency
                         ), now);
-                out.add(n);
-                addedExpenseIds.add(e.getId());
+                try {
+                    Notification savedNotification = notificationRepository.save(n);
+                    out.add(savedNotification);
+                    addedExpenseIds.add(e.getId());
+                } catch (Exception ignored) {
+                }
             }
             for (Expense e : expenseRepository.findByParticipantIdsContaining(userId)) {
                 if (e == null || e.getId() == null || addedExpenseIds.contains(e.getId()) || !isUserStillOwing(e, userId)) continue;
@@ -288,8 +423,12 @@ public class NotificationService {
                                 convertedAmount,
                                 preferredCurrency
                         ), now);
-                out.add(n);
-                addedExpenseIds.add(e.getId());
+                try {
+                    Notification savedNotification = notificationRepository.save(n);
+                    out.add(savedNotification);
+                    addedExpenseIds.add(e.getId());
+                } catch (Exception ignored) {
+                }
             }
         } catch (Exception ignored) {
         }

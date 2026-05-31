@@ -20,7 +20,7 @@ public class Notification {
     private String expenseId;
     private Type type;
     private String message;
-    private boolean read;
+    private boolean read=false;
     private Instant lastSent;
     private Instant createdAt;
 

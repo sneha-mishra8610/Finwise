@@ -55,7 +55,7 @@ public class UserService {
         if (user.getBudgetPreferences() == null) {
             user.setBudgetPreferences(existing.getBudgetPreferences());
         }
-            user.setSettlementReminderEnabled(existing.getSettlementReminderEnabled());
+        user.setSettlementReminderEnabled(existing.getSettlementReminderEnabled());
         Integer requestedDelay = user.getRemainderDelays();
         if (requestedDelay == null || requestedDelay <= 0) {
             user.setRemainderDelays(existing.getRemainderDelays());

@@ -9,63 +9,17 @@ import ExpensesPage from './pages/ExpensesPage'
 import FriendsPage from './pages/FriendsPage'
 import GroupsPage from './pages/GroupsPage'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL
-  || import.meta.env.VITE_API_BASE_FALLBACK_URL
-  || (import.meta.env.PROD
-    ? 'https://splitwise-clone-gxkq.onrender.com/api'
-    : 'http://localhost:8080/api')
-
-const API_FALLBACK_BASE = (() => {
-  const configuredFallback = import.meta.env.VITE_API_BASE_FALLBACK_URL || ''
-  return configuredFallback && configuredFallback !== API_BASE ? configuredFallback : ''
-})()
-
-function toRequestTarget(input: RequestInfo | URL): string | null {
-  if (typeof input === 'string') return input
-  if (input instanceof URL) return input.toString()
-  return null
-}
-
-function toFallbackTarget(input: RequestInfo | URL): string | null {
-  if (!API_FALLBACK_BASE) return null
-  const target = toRequestTarget(input)
-  if (!target || !target.startsWith(API_BASE)) return null
-  return target.replace(API_BASE, API_FALLBACK_BASE)
-}
-
-function isRetryableStatus(status: number): boolean {
-  return status === 502 || status === 503 || status === 504
-}
-
-function isRetryableNetworkError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false
-  return error.name === 'AbortError' || error.name === 'TypeError'
-}
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD
+  ? 'https://splitwise-clone-gxkq.onrender.com/api'
+  : 'http://localhost:8080/api')
 
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 20000) {
-  const runFetch = async (target: RequestInfo | URL) => {
-    const controller = new AbortController()
-    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
-    try {
-      return await fetch(target, { ...init, signal: controller.signal })
-    } finally {
-      window.clearTimeout(timeoutId)
-    }
-  }
-
-  const fallbackTarget = toFallbackTarget(input)
-
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
   try {
-    const primaryRes = await runFetch(input)
-    if (fallbackTarget && isRetryableStatus(primaryRes.status)) {
-      return await runFetch(fallbackTarget)
-    }
-    return primaryRes
-  } catch (error) {
-    if (fallbackTarget && isRetryableNetworkError(error)) {
-      return await runFetch(fallbackTarget)
-    }
-    throw error
+    return await fetch(input, { ...init, signal: controller.signal })
+  } finally {
+    window.clearTimeout(timeoutId)
   }
 }
 
@@ -346,24 +300,7 @@ function App() {
     const headers = new Headers(init.headers || {})
     if (authToken) headers.set('Authorization', `Bearer ${authToken}`)
     headers.set('Content-Type', headers.get('Content-Type') || 'application/json')
-
-    const runFetch = (target: RequestInfo | URL) => fetch(target, { ...init, headers })
-    const fallbackTarget = toFallbackTarget(input)
-
-    let res: Response
-    try {
-      res = await runFetch(input)
-      if (fallbackTarget && isRetryableStatus(res.status)) {
-        res = await runFetch(fallbackTarget)
-      }
-    } catch (error) {
-      if (fallbackTarget && isRetryableNetworkError(error)) {
-        res = await runFetch(fallbackTarget)
-      } else {
-        throw error
-      }
-    }
-
+    const res = await fetch(input, { ...init, headers })
     if (res.status === 401) {
       localStorage.removeItem('authToken')
       localStorage.removeItem('currentUserId')

@@ -13,6 +13,16 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD
   ? 'https://splitwise-clone-gxkq.onrender.com/api'
   : 'http://localhost:8080/api')
 
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 20000) {
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(input, { ...init, signal: controller.signal })
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
+}
+
 const EXPENSE_CATEGORIES = [
   'groceries',
   'rent',
@@ -952,7 +962,7 @@ function App() {
     e.preventDefault(); setSignupError('')
     setSignupLoading(true)
     try {
-      const res = await fetch(`${API_BASE}/auth/signup`, {
+      const res = await fetchWithTimeout(`${API_BASE}/auth/signup`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: signupName, email: signupEmail, password: signupPassword }),
       })
@@ -962,9 +972,14 @@ function App() {
         setAuthToken(data.token); setSignupName(''); setSignupEmail(''); setSignupPassword('')
         setUsers([data.user]); setCurrentUserId(data.user.id)
       } else {
-        setSignupError(res.status === 409 ? 'User with this email already exists' : 'Signup failed')
+        const message = await res.text().catch(() => '')
+        setSignupError(res.status === 409 ? 'User with this email already exists' : message || `Signup failed (${res.status})`)
       }
-    } catch { setSignupError('Could not reach server') }
+    } catch (error) {
+      setSignupError(error instanceof DOMException && error.name === 'AbortError'
+        ? 'Signup request timed out. The server may be waking up - try again.'
+        : 'Could not reach server')
+    }
     finally { setSignupLoading(false) }
   }
 
@@ -972,7 +987,7 @@ function App() {
     e.preventDefault(); setLoginError('')
     setLoginLoading(true)
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
+      const res = await fetchWithTimeout(`${API_BASE}/auth/login`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       })
@@ -982,9 +997,14 @@ function App() {
         setAuthToken(data.token); setLoginEmail(''); setLoginPassword('')
         setUsers([data.user]); setCurrentUserId(data.user.id)
       } else {
-        setLoginError(res.status === 401 ? 'Invalid email or password' : 'Login failed')
+        const message = await res.text().catch(() => '')
+        setLoginError(res.status === 401 ? 'Invalid email or password' : message || `Login failed (${res.status})`)
       }
-    } catch { setLoginError('Could not reach server') }
+    } catch (error) {
+      setLoginError(error instanceof DOMException && error.name === 'AbortError'
+        ? 'Login request timed out. The server may be waking up - try again.'
+        : 'Could not reach server')
+    }
     finally { setLoginLoading(false) }
   }
 

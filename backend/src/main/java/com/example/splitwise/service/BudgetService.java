@@ -6,11 +6,9 @@ import com.example.splitwise.repository.ExpenseRepository;
 import com.example.splitwise.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.*;
 import java.time.temporal.IsoFields;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class BudgetService {
@@ -29,12 +27,7 @@ public class BudgetService {
         for (String period : List.of("DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY")) {
             PeriodRange pr = computeRange(period, now);
             String storageToken = pr.storageToken;
-            String key = String.format("budget:%s:%s", period, storageToken);
-            double amount = 0d;
-            if (user.getBudgetPreferences() != null && user.getBudgetPreferences().containsKey(key)) {
-                Double val = user.getBudgetPreferences().get(key);
-                amount = val != null ? val : 0d;
-            }
+            double amount = resolveBudgetAmount(user.getBudgetPreferences(), period, storageToken);
             // sum expenses where payerId == userId and createdAt in [start, end)
             Instant start = pr.start.toInstant();
             Instant end = pr.end.toInstant();
@@ -59,10 +52,31 @@ public class BudgetService {
     public User setUserBudget(String userId, String period, String storageToken, double amount) {
         User user = userRepository.findById(userId).orElseThrow();
         Map<String, Double> next = new HashMap<>(user.getBudgetPreferences() == null ? Map.of() : user.getBudgetPreferences());
-        String key = String.format("budget:%s:%s", period, storageToken);
+        String key = budgetPreferenceKey(period);
         next.put(key, amount);
         user.setBudgetPreferences(next);
         return userRepository.save(user);
+    }
+
+    private double resolveBudgetAmount(Map<String, Double> budgetPreferences, String period, String storageToken) {
+        if (budgetPreferences == null) return 0d;
+
+        Double defaultAmount = budgetPreferences.get(budgetPreferenceKey(period));
+        if (defaultAmount != null) return defaultAmount;
+
+        Double currentPeriodAmount = budgetPreferences.get(String.format("budget:%s:%s", period, storageToken));
+        if (currentPeriodAmount != null) return currentPeriodAmount;
+
+        return budgetPreferences.entrySet().stream()
+            .filter(entry -> entry.getKey() != null && entry.getKey().startsWith("budget:" + period + ":"))
+            .map(Map.Entry::getValue)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElse(0d);
+    }
+
+    private String budgetPreferenceKey(String period) {
+        return String.format("budget:%s", period);
     }
 
     private static class PeriodRange {

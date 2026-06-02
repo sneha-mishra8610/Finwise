@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -93,7 +94,7 @@ public class ExpenseController {
             Expense expense=expense1.get();
             if(expense==null)
                 return ResponseEntity.notFound().build();
-            if(expense.getCreatedBy().equals(userId))
+            if(Objects.equals(expense.getCreatedBy(), userId) || (expense.getCreatedBy() == null && Objects.equals(expense.getPayerId(), userId)))
                 return ResponseEntity.badRequest().body("User cannot flag the expense they created");
             if(expense.getFlaggedBy()==null)
                 expense.setFlaggedBy(new ArrayList<>());
@@ -114,7 +115,7 @@ public class ExpenseController {
             Expense expense=expense1.get();
             if(expense==null)
                 return ResponseEntity.notFound().build();
-            if(expense.getCreatedBy().equals(userId))
+            if(Objects.equals(expense.getCreatedBy(), userId) || (expense.getCreatedBy() == null && Objects.equals(expense.getPayerId(), userId)))
                 return ResponseEntity.badRequest().body("User cannot unflag the expense they created");
             if(expense.getFlaggedBy()!=null&&expense.getFlaggedBy().contains(userId)){
                 expense.getFlaggedBy().remove(userId);

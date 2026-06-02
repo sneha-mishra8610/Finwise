@@ -8,6 +8,8 @@ import AccountPage from './pages/AccountPage'
 import ExpensesPage from './pages/ExpensesPage'
 import FriendsPage from './pages/FriendsPage'
 import GroupsPage from './pages/GroupsPage'
+import BudgetPage from './pages/BudgetPage'
+import ExportPage from './pages/ExportPage'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD
   ? 'https://splitwise-clone-gxkq.onrender.com/api'
@@ -103,6 +105,7 @@ type Activity = {
 type ActivityFilter = 'ALL' | 'EXPENSE' | 'SETTLEMENT' | 'GROUP' | 'FRIEND'
 type ActivitySortOrder = 'NEWEST' | 'OLDEST'
 type DashboardMixMode = 'TYPE' | 'CATEGORY'
+type AppTab = 'Home' | 'Groups' | 'Expenses' | 'Friends' | 'Activity' | 'Budget' | 'Export' | 'Account'
 
 type PendingInvitation = {
   id: string
@@ -242,7 +245,7 @@ function getCurrencySymbol(currency: string) {
   }
 }
 
-function getSidebarIcon(tab: 'Home' | 'Groups' | 'Expenses' | 'Friends' | 'Activity' | 'Account') {
+function getSidebarIcon(tab: AppTab) {
   const commonProps = {
     viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
     strokeWidth: 1.9, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
@@ -254,6 +257,8 @@ function getSidebarIcon(tab: 'Home' | 'Groups' | 'Expenses' | 'Friends' | 'Activ
     case 'Expenses': return <svg {...commonProps}><rect x="5" y="4.5" width="14" height="15" rx="2.5" /><path d="M8.5 9h7" /><path d="M8.5 13h7" /><path d="M8.5 17h4" /></svg>
     case 'Friends': return <svg {...commonProps}><circle cx="9" cy="9" r="2.5" /><circle cx="16.5" cy="10" r="2.2" /><path d="M4.5 18c.8-2.4 2.7-3.7 5.2-3.7 2.4 0 4.2 1.2 5.1 3.3" /><path d="M14.2 17.4c.6-1.4 1.7-2.1 3.3-2.1 1.1 0 2 .2 2.8.8" /></svg>
     case 'Activity': return <svg {...commonProps}><circle cx="12" cy="12" r="8" /><path d="M12 7.8v4.7l3 1.9" /></svg>
+    case 'Budget': return <svg {...commonProps}><path d="M4.5 19.5h15" /><path d="M7 16.5V11" /><path d="M12 16.5V7" /><path d="M17 16.5v-4" /><path d="M5 5.5h14" /></svg>
+    case 'Export': return <svg {...commonProps}><path d="M12 3.5v11" /><path d="m7.5 10 4.5 4.5L16.5 10" /><path d="M5 18.5h14" /><path d="M5 14.5v4h14v-4" /></svg>
     case 'Account': return <svg {...commonProps}><circle cx="12" cy="8.5" r="3" /><path d="M6 19c1.1-2.8 3.2-4.2 6-4.2s4.9 1.4 6 4.2" /></svg>
     default: return null
   }
@@ -318,10 +323,10 @@ function App() {
       const data = await res.json()
       const mapped = Array.isArray(data)
         ? data.map((msg: { senderId: string; message: string; timestamp: string }) => ({
-            user: users.find(u => u.id === msg.senderId)?.name || msg.senderId || 'Unknown',
-            message: msg.message,
-            timestamp: msg.timestamp,
-          }))
+          user: users.find(u => u.id === msg.senderId)?.name || msg.senderId || 'Unknown',
+          message: msg.message,
+          timestamp: msg.timestamp,
+        }))
         : []
       setGroupChats(prev => ({ ...prev, [groupId]: mapped }))
     } catch { /* ignore */ }
@@ -341,10 +346,10 @@ function App() {
       const data = await res.json()
       const mapped = Array.isArray(data)
         ? data.map((msg: { senderId: string; message: string; timestamp: string }) => ({
-            user: users.find(u => u.id === msg.senderId)?.name || msg.senderId || 'Unknown',
-            message: msg.message,
-            timestamp: msg.timestamp,
-          }))
+          user: users.find(u => u.id === msg.senderId)?.name || msg.senderId || 'Unknown',
+          message: msg.message,
+          timestamp: msg.timestamp,
+        }))
         : []
       setExpenseChats(prev => ({ ...prev, [expenseId]: mapped }))
     } catch { /* ignore */ }
@@ -430,7 +435,7 @@ function App() {
   const [expenseEditLogs, setExpenseEditLogs] = useState<{ [expenseId: string]: ExpenseEditLog[] }>({})
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [expenseViewFilter, setExpenseViewFilter] = useState<'ALL' | 'PERSONAL' | 'GROUP' | 'UNSETTLED' | 'RECURRING' | 'FLAGGED'>('ALL')
-  const [activeTab, setActiveTab] = useState<'Home' | 'Groups' | 'Expenses' | 'Friends' | 'Activity' | 'Account'>('Home')
+  const [activeTab, setActiveTab] = useState<AppTab>('Home')
   const [groupDetailView, setGroupDetailView] = useState<string | null>(null)
   const [friendDetailView, setFriendDetailView] = useState<string | null>(null)
   const [showQuickGroupChat, setShowQuickGroupChat] = useState(false)
@@ -487,9 +492,9 @@ function App() {
   const isAuthenticated = !!authToken
 
   const dashboardPeriodMeta = getBudgetPeriodMeta(dashboardPeriod, new Date())
-  const dashboardBudgetStorageKey = `budget:${dashboardPeriod}:${dashboardPeriodMeta.storageToken}`
+  const dashboardBudgetStorageKey = `budget:${dashboardPeriod}`
   const budgetPeriodMeta = getBudgetPeriodMeta(selectedBudgetPeriod, new Date())
-  const budgetStorageKey = `budget:${selectedBudgetPeriod}:${budgetPeriodMeta.storageToken}`
+  const budgetStorageKey = `budget:${selectedBudgetPeriod}`
 
   // ── Effects ──────────────────────────────────────────────────────────────
 
@@ -512,15 +517,13 @@ function App() {
   }, [defaultCurrency, budgetSummaryCurrency])
 
   useEffect(() => {
-    const storageToken = dashboardBudgetStorageKey.split(':').pop() || ''
-    const summary = budgetSummaries.find(s => s.period === dashboardPeriod && s.storageToken === storageToken)
+    const summary = budgetSummaries.find(s => s.period === dashboardPeriod)
     const amt = summary ? summary.amount : (currentUser?.budgetPreferences?.[dashboardBudgetStorageKey] ?? 0)
     setDashboardBudgetAmount(Number.isFinite(amt) ? amt : 0)
   }, [dashboardBudgetStorageKey, currentUser, budgetSummaries, dashboardPeriod])
 
   useEffect(() => {
-    const storageToken = budgetPeriodMeta.storageToken
-    const summary = budgetSummaries.find(s => s.period === selectedBudgetPeriod && s.storageToken === storageToken)
+    const summary = budgetSummaries.find(s => s.period === selectedBudgetPeriod)
     const amt = summary ? summary.amount : (currentUser?.budgetPreferences?.[budgetStorageKey] ?? 0)
     const parsed = Number(amt)
     setBudgetAmount(Number.isFinite(parsed) ? parsed : 0)
@@ -544,6 +547,8 @@ function App() {
       const legacy = localStorage.getItem(`budget:${period}:${currentUser.id}:${meta.storageToken}`)
       const parsed = legacy ? Number(legacy) : 0
       if (Number.isFinite(parsed) && parsed > 0) { nextPrefs[key] = parsed; hasChanges = true; return }
+      const currentPeriodVal = nextPrefs[`budget:${period}:${meta.storageToken}`]
+      if (Number.isFinite(currentPeriodVal) && currentPeriodVal > 0) { nextPrefs[key] = currentPeriodVal; hasChanges = true; return }
       const prevMeta = getBudgetPeriodMeta(period, getPreviousPeriodDate(period, new Date()))
       const prevVal = nextPrefs[`budget:${period}:${prevMeta.storageToken}`]
       if (Number.isFinite(prevVal) && prevVal > 0) { nextPrefs[key] = prevVal; hasChanges = true }
@@ -617,7 +622,7 @@ function App() {
 
   useEffect(() => {
     if (authToken && currentUserId) {
-      ;(async () => {
+      ; (async () => {
         await fetchPersonalExpenses(currentUserId)
         setActivityPage(0)
         await fetchActivities(currentUserId, 0, false)
@@ -633,21 +638,21 @@ function App() {
   useEffect(() => {
     if (!authToken || !currentUserId || activityFilter === 'ALL') return
     let cancelled = false
-    ;(async () => {
-      setActivityFilterLoading(true)
-      setActivityPage(0)
-      setActivities([])
-      let matchesFound = 0, lastPage = 0
-      for (let page = 0; page < 12 && !cancelled; page++) {
-        const data = await fetchActivities(currentUserId, page, page !== 0)
-        lastPage = page
-        if (!data) break
-        matchesFound += data.filter(a => getActivityCategory(a) === activityFilter).length
-        if (matchesFound >= 3 || !activityHasMore) break
-      }
-      setActivityPage(lastPage)
-      setActivityFilterLoading(false)
-    })()
+      ; (async () => {
+        setActivityFilterLoading(true)
+        setActivityPage(0)
+        setActivities([])
+        let matchesFound = 0, lastPage = 0
+        for (let page = 0; page < 12 && !cancelled; page++) {
+          const data = await fetchActivities(currentUserId, page, page !== 0)
+          lastPage = page
+          if (!data) break
+          matchesFound += data.filter(a => getActivityCategory(a) === activityFilter).length
+          if (matchesFound >= 3 || !activityHasMore) break
+        }
+        setActivityPage(lastPage)
+        setActivityFilterLoading(false)
+      })()
     return () => { cancelled = true }
   }, [activityFilter, authToken, currentUserId]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -697,6 +702,7 @@ function App() {
   }
 
   function isExpenseUnsettledForCurrentUser(expense: Expense): boolean {
+    if (expense.type !== 'GROUP') return false
     const participants = expense.participantIds || []
     if (participants.length < 2 || !participants.includes(currentUserId)) return false
     if (expense.payerId === currentUserId) return expense.expenseStatus !== 'Settled'
@@ -853,16 +859,16 @@ function App() {
   }, [authedFetch, currentUserId])
 
   const fetchExpenseEditLogs = React.useCallback(async (expenseId: string) => {
-  try {
-    const res = await authedFetch(`${API_BASE}/expense-edit-logs/${expenseId}`)
-    if (res.ok) {
-      const logs = await res.json()
-      setExpenseEditLogs(prev => ({ ...prev, [expenseId]: logs }))
+    try {
+      const res = await authedFetch(`${API_BASE}/expense-edit-logs/${expenseId}`)
+      if (res.ok) {
+        const logs = await res.json()
+        setExpenseEditLogs(prev => ({ ...prev, [expenseId]: logs }))
+      }
+    } catch {
+      /* ignore */
     }
-  } catch {
-    /* ignore */
-  }
-}, [authedFetch])
+  }, [authedFetch])
 
   async function fetchFriendBalances() {
     if (!currentUserId) return
@@ -1040,11 +1046,11 @@ function App() {
       customSplits: splitMode === 'unequal'
         ? Object.fromEntries(Object.entries(customSplits).map(([k, v]) => [k, parseFloat(v) || 0]))
         : splitMode === 'percentage'
-        ? Object.fromEntries(Object.entries(customSplits).map(([k, v]) => {
+          ? Object.fromEntries(Object.entries(customSplits).map(([k, v]) => {
             const pct = parseFloat(v) || 0
             return [k, Math.round((pct / 100) * parseFloat(expenseAmount) * 100) / 100]
           }))
-        : undefined,
+          : undefined,
       isRecurring: isRecurringExpense,
       recurrenceStartDate: isRecurringExpense && recurrenceStartDate ? new Date(`${recurrenceStartDate}T00:00:00.000Z`).toISOString() : undefined,
       recurrenceType: isRecurringExpense ? recurrenceType.toUpperCase() : undefined,
@@ -1252,9 +1258,32 @@ function App() {
       body: JSON.stringify({ period: selectedBudgetPeriod, storageToken: budgetPeriodMeta.storageToken, amount: amountInINR }),
     })
     if (res.ok) {
-      try { const u: User = await res.json(); setUsers(prev => prev.map(x => x.id === u.id ? u : x)) } catch { /* ignore */ }
+      try {
+        const u: User = await res.json()
+        const budgetPreferences = {
+          ...(u.budgetPreferences || {}),
+          [`budget:${selectedBudgetPeriod}`]: amountInINR,
+        }
+        setUsers(prev => prev.map(x => x.id === u.id ? { ...u, budgetPreferences } : x))
+      } catch { /* ignore */ }
       setBudgetAmount(amountInINR); setBudgetInput(sanitized > 0 ? String(sanitized) : '')
+      setBudgetSummaries(prev => {
+        const nextSummary = {
+          period: selectedBudgetPeriod,
+          storageToken: budgetPeriodMeta.storageToken,
+          amount: amountInINR,
+          spent: spentForSelectedPeriod,
+          remaining: amountInINR - spentForSelectedPeriod,
+          rangeStart: budgetPeriodMeta.rangeStart.toISOString(),
+          rangeEnd: budgetPeriodMeta.rangeEnd.toISOString(),
+          label: budgetPeriodMeta.label,
+        }
+        const found = prev.some(s => s.period === selectedBudgetPeriod)
+        return found ? prev.map(s => s.period === selectedBudgetPeriod ? { ...s, ...nextSummary } : s) : [...prev, nextSummary]
+      })
       void fetchUserBudgets(currentUser.id)
+    } else {
+      alert('Failed to save budget. Please try again.')
     }
   }
 
@@ -1293,14 +1322,19 @@ function App() {
     }
     const { endpoint, filename, mime } = map[format]
     try {
-      const headers = new Headers(); if (authToken) headers.set('Authorization', `Bearer ${authToken}`)
-      const res = await fetch(endpoint, { method: 'GET', headers })
-      if (!res.ok) throw new Error()
+      const res = await authedFetch(endpoint, { method: 'GET' })
+      if (!res.ok) {
+        const message = await res.text().catch(() => '')
+        throw new Error(`Export failed (${res.status}) from ${endpoint}${message ? `: ${message}` : ''}`)
+      }
       const blob = await res.blob()
+      if (blob.size === 0) throw new Error(`Export failed: empty file returned from ${endpoint}`)
       const url = window.URL.createObjectURL(new Blob([blob], { type: mime }))
       const a = document.createElement('a'); a.href = url; a.setAttribute('download', filename)
       document.body.appendChild(a); a.click(); a.parentNode?.removeChild(a); window.URL.revokeObjectURL(url)
-    } catch { alert('Failed to export data. Please try again.') }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to export data. Please try again.')
+    }
   }
 
   function resetPasswordForm() { setCurrentPassword(''); setNewPassword(''); setConfirmNewPassword(''); setPasswordChangeError(''); setPasswordChangeSuccess(''); setPasswordChangeLoading(false) }
@@ -1404,8 +1438,8 @@ function App() {
 
   const currentFriends: User[] = currentUser
     ? currentUser.friendIds.map(fid => users.find(u => u.id === fid)).filter((u): u is User => !!u)
-        .filter(u => u.name.toLowerCase().includes(friendSearch.toLowerCase()))
-        .sort((a, b) => a.name.localeCompare(b.name))
+      .filter(u => u.name.toLowerCase().includes(friendSearch.toLowerCase()))
+      .sort((a, b) => a.name.localeCompare(b.name))
     : []
 
   const dashboardFriendBalances = currentFriends
@@ -1586,9 +1620,9 @@ function App() {
   const settlementRate = sharedExpenses.length ? (settledExpenses.length / sharedExpenses.length) * 100 : 0
   const avgSettlementDays = settledExpenses.length
     ? settledExpenses.reduce((sum, e) => {
-        if (!e.createdAt) return sum
-        return sum + Math.max((now.getTime() - new Date(e.createdAt).getTime()) / (1000 * 60 * 60 * 24), 0)
-      }, 0) / settledExpenses.length
+      if (!e.createdAt) return sum
+      return sum + Math.max((now.getTime() - new Date(e.createdAt).getTime()) / (1000 * 60 * 60 * 24), 0)
+    }, 0) / settledExpenses.length
     : 0
   const memberSinceDates = [...allExpenses.map(e => e.createdAt), ...activities.map(a => a.createdAt)].filter(Boolean) as string[]
   const memberSince = memberSinceDates.length
@@ -1816,7 +1850,7 @@ function App() {
           )}
           {filteredExpenses.length > workspaceExpensesPage * WORKSPACE_EXPENSES_PAGE_SIZE && (
             <div style={{ textAlign: 'left', marginTop: '1rem' }}>
-              <button type="button" onClick={() => setWorkspaceExpensesPage(p => p + 1)}>Load more</button>
+              <button type="button" className="workspace-load-more-btn" onClick={() => setWorkspaceExpensesPage(p => p + 1)}>Load more</button>
             </div>
           )}
         </section>
@@ -1879,7 +1913,6 @@ function App() {
           <button onClick={handleShowNotifications} aria-label="Notifications">
             🔔{unreadNotifications.length > 0 && <span style={{ marginLeft: 6, color: '#d92d20', fontWeight: 700 }}>{unreadNotifications.length}</span>}
           </button>
-          <button onClick={() => { localStorage.removeItem('authToken'); localStorage.removeItem('currentUserId'); setAuthToken(null); setCurrentUserId('') }}>Log out</button>
         </div>
       </header>
 
@@ -1890,42 +1923,42 @@ function App() {
             <h2>Notifications</h2>
             {loadingNotifications ? <div>Loading...</div>
               : notificationError ? <div className="error-text">{notificationError}</div>
-              : unreadNotifications.length === 0 && readNotifications.length === 0 ? <div>No notifications available.</div>
-              : (
-                <div style={{ maxHeight: 360, overflowY: 'auto' }}>
-                  {unreadNotifications.length > 0 && (
-                    <>
-                      <div style={{ fontWeight: 700, marginBottom: 8 }}>Unread</div>
-                      <ul className="card-list" style={{ marginBottom: 12 }}>
-                        {unreadNotifications.map((n, i) => (
-                          <li key={n.id ?? `${n.type}-${i}`} className="card" style={{ marginBottom: 12, borderLeft: '4px solid #2563eb', background: '#eef4ff' }}>
-                            <strong>{n.type === 'OWED' ? 'You are owed' : 'You owe'}</strong><br />{n.message}<br />
-                            <span className="muted">{(n.lastSent || n.createdAt) ? new Date((n.lastSent || n.createdAt) as string).toLocaleString() : 'Recently'}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                  {readNotifications.length > 0 && (
-                    <>
-                      <div style={{ fontWeight: 700, marginBottom: 8 }}>Read</div>
-                      <ul className="card-list" style={{ marginBottom: 12 }}>
-                        {readNotifications.map((n, i) => (
-                          <li key={n.id ?? `${n.type}-${i}`} className="card" style={{ marginBottom: 12, opacity: 0.85 }}>
-                            <strong>{n.type === 'OWED' ? 'You are owed' : 'You owe'}</strong><br />{n.message}<br />
-                            <span className="muted">{(n.lastSent || n.createdAt) ? new Date((n.lastSent || n.createdAt) as string).toLocaleString() : 'Recently'}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      {hasMoreReadNotifications && (
-                        <button className="icon-btn" onClick={handleLoadMoreReadNotifications} disabled={loadingMoreReadNotifications}>
-                          {loadingMoreReadNotifications ? 'Loading...' : 'Load more'}
-                        </button>
+                : unreadNotifications.length === 0 && readNotifications.length === 0 ? <div>No notifications available.</div>
+                  : (
+                    <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+                      {unreadNotifications.length > 0 && (
+                        <>
+                          <div style={{ fontWeight: 700, marginBottom: 8 }}>Unread</div>
+                          <ul className="card-list" style={{ marginBottom: 12 }}>
+                            {unreadNotifications.map((n, i) => (
+                              <li key={n.id ?? `${n.type}-${i}`} className="card" style={{ marginBottom: 12, borderLeft: '4px solid #2563eb', background: '#eef4ff' }}>
+                                <strong>{n.type === 'OWED' ? 'You are owed' : 'You owe'}</strong><br />{n.message}<br />
+                                <span className="muted">{(n.lastSent || n.createdAt) ? new Date((n.lastSent || n.createdAt) as string).toLocaleString() : 'Recently'}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
                       )}
-                    </>
+                      {readNotifications.length > 0 && (
+                        <>
+                          <div style={{ fontWeight: 700, marginBottom: 8 }}>Read</div>
+                          <ul className="card-list" style={{ marginBottom: 12 }}>
+                            {readNotifications.map((n, i) => (
+                              <li key={n.id ?? `${n.type}-${i}`} className="card" style={{ marginBottom: 12, opacity: 0.85 }}>
+                                <strong>{n.type === 'OWED' ? 'You are owed' : 'You owe'}</strong><br />{n.message}<br />
+                                <span className="muted">{(n.lastSent || n.createdAt) ? new Date((n.lastSent || n.createdAt) as string).toLocaleString() : 'Recently'}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          {hasMoreReadNotifications && (
+                            <button className="icon-btn" onClick={handleLoadMoreReadNotifications} disabled={loadingMoreReadNotifications}>
+                              {loadingMoreReadNotifications ? 'Loading...' : 'Load more'}
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   )}
-                </div>
-              )}
             <button className="icon-btn" style={{ marginTop: 16 }} onClick={() => setShowNotifications(false)}>Close</button>
           </div>
         </div>
@@ -1936,7 +1969,7 @@ function App() {
           <section className="panel sidebar-nav-panel">
             <p className="sidebar-nav-label">Navigation</p>
             <nav className="sidebar-tabs">
-              {(['Home', 'Groups', 'Expenses', 'Friends', 'Activity', 'Account'] as const).map(tab => (
+              {(['Home', 'Groups', 'Expenses', 'Friends', 'Activity', 'Budget', 'Export', 'Account'] as const).map(tab => (
                 <button key={tab} className={activeTab === tab ? 'sidebar-tab sidebar-tab-active' : 'sidebar-tab'}
                   onClick={() => { setActiveTab(tab); setGroupDetailView(null); setFriendDetailView(null); setExpenseDetailView(null) }}>
                   <span className="sidebar-tab-icon" aria-hidden="true">{getSidebarIcon(tab)}</span>
@@ -1945,6 +1978,13 @@ function App() {
               ))}
             </nav>
           </section>
+          <button
+            type="button"
+            className="sidebar-logout-btn"
+            onClick={() => { localStorage.removeItem('authToken'); localStorage.removeItem('currentUserId'); setAuthToken(null); setCurrentUserId('') }}
+          >
+            Log out
+          </button>
         </aside>
 
         <main className="main">
@@ -2182,6 +2222,35 @@ function App() {
               getActivityBadge={getActivityBadge}
               formatRelativeTime={formatRelativeTime}
             />
+          )}
+
+          {activeTab === 'Budget' && currentUser && (
+            <BudgetPage
+              currentUser={currentUser}
+              defaultCurrency={defaultCurrency}
+              convertINR={convertINR}
+              getCurrencySymbol={getCurrencySymbol}
+              selectedBudgetPeriod={selectedBudgetPeriod}
+              setSelectedBudgetPeriod={setSelectedBudgetPeriod}
+              selectedBudgetMeta={selectedBudgetMeta}
+              budgetInput={budgetInput}
+              setBudgetInput={setBudgetInput}
+              budgetSummaryCurrency={budgetSummaryCurrency}
+              setBudgetSummaryCurrency={setBudgetSummaryCurrency}
+              budgetAmount={budgetAmount}
+              budgetRemaining={budgetRemaining}
+              budgetProgress={budgetProgress}
+              spentForSelectedPeriod={spentForSelectedPeriod}
+              handleSaveBudget={handleSaveBudget}
+              budgetSummaries={budgetSummaries}
+              allExpenses={allExpenses}
+              getBudgetPeriodMeta={getBudgetPeriodMeta}
+              getPreviousPeriodDate={getPreviousPeriodDate}
+            />
+          )}
+
+          {activeTab === 'Export' && (
+            <ExportPage handleExport={handleExport} />
           )}
 
           {activeTab === 'Account' && currentUser && (

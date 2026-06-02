@@ -53,7 +53,7 @@ public class UserController {
         String period = (String) body.get("period");
         String storageToken = (String) body.get("storageToken");
         Double amount = body.get("amount") instanceof Number ? ((Number) body.get("amount")).doubleValue() : null;
-        if (period == null || storageToken == null || amount == null) return ResponseEntity.badRequest().build();
+        if (period == null || amount == null) return ResponseEntity.badRequest().build();
         User updated = budgetService.setUserBudget(userId, period, storageToken, amount);
         return ResponseEntity.ok(updated);
     }
@@ -118,4 +118,3 @@ public class UserController {
     return ResponseEntity.ok(userService.getAllFriendBalances(userId));
     }
 }
-

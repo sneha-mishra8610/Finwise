@@ -13,8 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -38,17 +40,24 @@ public class ExportController {
     }
 
     private List<Expense> getExpensesForUser(String userId) {
-        List<Expense> all = new ArrayList<>();
+        Map<String, Expense> all = new LinkedHashMap<>();
 
-        all.addAll(expenseRepository
-            .findByPayerIdAndType(userId, Expense.ExpenseType.PERSONAL));
+        addExpenses(all, expenseRepository.findByPayerId(userId));
+        addExpenses(all, expenseRepository.findByParticipantIdsContaining(userId));
 
         List<Group> groups = groupRepository.findByMemberIdsContaining(userId);
         for (Group g : groups) {
-            all.addAll(expenseRepository.findByGroupId(g.getId()));
+            addExpenses(all, expenseRepository.findByGroupId(g.getId()));
         }
 
-        return all;
+        return new ArrayList<>(all.values());
+    }
+
+    private void addExpenses(Map<String, Expense> target, List<Expense> expenses) {
+        for (Expense expense : expenses) {
+            String key = expense.getId() != null ? expense.getId() : String.valueOf(System.identityHashCode(expense));
+            target.putIfAbsent(key, expense);
+        }
     }
 
 
@@ -56,8 +65,8 @@ public class ExportController {
     public ResponseEntity<byte[]> exportPdf(@PathVariable String userId) throws Exception {
         User user = userRepository.findById(userId).orElseThrow();
         List<Expense> expenses = getExpensesForUser(userId);
-        Map<String, String> userIdToName = userRepository.findAll().stream().collect(Collectors.toMap(User::getId, User::getName));
-        Map<String, String> groupIdToName = groupRepository.findAll().stream().collect(Collectors.toMap(Group::getId, Group::getName));
+        Map<String, String> userIdToName = getUserIdToName();
+        Map<String, String> groupIdToName = getGroupIdToName();
 
         byte[] pdf = exportService.generatePdf(user, expenses, userIdToName, groupIdToName);
 
@@ -73,8 +82,8 @@ public class ExportController {
     public ResponseEntity<byte[]> exportExcel(@PathVariable String userId) throws Exception {
         User user = userRepository.findById(userId).orElseThrow();
         List<Expense> expenses = getExpensesForUser(userId);
-        Map<String, String> userIdToName = userRepository.findAll().stream().collect(Collectors.toMap(User::getId, User::getName));
-        Map<String, String> groupIdToName = groupRepository.findAll().stream().collect(Collectors.toMap(Group::getId, Group::getName));
+        Map<String, String> userIdToName = getUserIdToName();
+        Map<String, String> groupIdToName = getGroupIdToName();
 
         byte[] excel = exportService.generateExcel(user, expenses, userIdToName, groupIdToName);
 
@@ -91,8 +100,8 @@ public class ExportController {
     public ResponseEntity<byte[]> exportWord(@PathVariable String userId) throws Exception {
         User user = userRepository.findById(userId).orElseThrow();
         List<Expense> expenses = getExpensesForUser(userId);
-        Map<String, String> userIdToName = userRepository.findAll().stream().collect(Collectors.toMap(User::getId, User::getName));
-        Map<String, String> groupIdToName = groupRepository.findAll().stream().collect(Collectors.toMap(Group::getId, Group::getName));
+        Map<String, String> userIdToName = getUserIdToName();
+        Map<String, String> groupIdToName = getGroupIdToName();
 
         byte[] word = exportService.generateWord(user, expenses, userIdToName, groupIdToName);
 
@@ -102,5 +111,17 @@ public class ExportController {
             .contentType(MediaType.parseMediaType(
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
             .body(word);
+    }
+
+    private Map<String, String> getUserIdToName() {
+        return userRepository.findAll().stream()
+            .filter(user -> user.getId() != null)
+            .collect(Collectors.toMap(User::getId, user -> Objects.toString(user.getName(), user.getId()), (left, right) -> left));
+    }
+
+    private Map<String, String> getGroupIdToName() {
+        return groupRepository.findAll().stream()
+            .filter(group -> group.getId() != null)
+            .collect(Collectors.toMap(Group::getId, group -> Objects.toString(group.getName(), group.getId()), (left, right) -> left));
     }
 }

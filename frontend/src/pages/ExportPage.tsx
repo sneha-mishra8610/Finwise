@@ -1,0 +1,277 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export type ExportPageProps = Record<string, any>
+
+const EXPORT_TYPES = [
+  {
+    key: 'pdf',
+    icon: (
+      <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+        <rect width="48" height="48" rx="12" fill="rgba(108,92,231,0.18)"/>
+        <path d="M14 12h14l8 8v16a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V14a2 2 0 0 1 2-2z"
+          stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <polyline points="28 12 28 20 36 20"
+          stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1="18" y1="26" x2="30" y2="26"
+          stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round"/>
+        <line x1="18" y1="30" x2="26" y2="30"
+          stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round"/>
+      </svg>
+    ),
+    title: 'Export PDF Report',
+    desc: 'Generate a PDF report of your expenses, summary and activity.',
+    features: ['Expense summary', 'Financial overview', 'Activity timeline'],
+    btnLabel: 'Export PDF',
+    btnClass: 'ep-btn-purple',
+    accentColor: '#a78bfa',
+    bgColor: 'rgba(108,92,231,0.06)',
+    borderColor: 'rgba(108,92,231,0.18)',
+  },
+  {
+    key: 'excel',
+    icon: (
+      <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+        <rect width="48" height="48" rx="12" fill="rgba(52,211,153,0.15)"/>
+        <path d="M14 12h14l8 8v16a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V14a2 2 0 0 1 2-2z"
+          stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <polyline points="28 12 28 20 36 20"
+          stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M19 24l5 6 5-6M24 30v-8"
+          stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: 'Export Excel File',
+    desc: 'Download your data in Excel format for further analysis.',
+    features: ['All transactions', 'Category breakdown', 'Detailed records'],
+    btnLabel: 'Export Excel',
+    btnClass: 'ep-btn-green',
+    accentColor: '#34d399',
+    bgColor: 'rgba(52,211,153,0.05)',
+    borderColor: 'rgba(52,211,153,0.18)',
+  },
+  {
+    key: 'word',
+    icon: (
+      <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+        <rect width="48" height="48" rx="12" fill="rgba(59,130,246,0.15)"/>
+        <path d="M14 12h14l8 8v16a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V14a2 2 0 0 1 2-2z"
+          stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <polyline points="28 12 28 20 36 20"
+          stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1="18" y1="26" x2="30" y2="26"
+          stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round"/>
+        <line x1="18" y1="30" x2="24" y2="30"
+          stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round"/>
+      </svg>
+    ),
+    title: 'Export Word Document',
+    desc: 'Get a formatted Word document with your full expense report.',
+    features: ['Full expense report', 'Group summaries', 'Settlement history'],
+    btnLabel: 'Export Word',
+    btnClass: 'ep-btn-blue',
+    accentColor: '#60a5fa',
+    bgColor: 'rgba(59,130,246,0.05)',
+    borderColor: 'rgba(59,130,246,0.18)',
+  },
+]
+
+export default function ExportPage(props: ExportPageProps) {
+  const { handleExport } = props
+
+  return (
+    <div className="ep-shell">
+
+      {/* ── Page header ── */}
+      <div className="ep-page-head">
+        <h2 className="ep-title">Export Data</h2>
+        <p className="ep-sub">Choose what you want to export</p>
+      </div>
+
+      {/* ── Export cards grid ── */}
+      <div className="ep-cards-grid">
+        {EXPORT_TYPES.map(t => (
+          <section
+            key={t.key}
+            className="ep-card"
+            style={{
+              '--ep-border': t.borderColor,
+              '--ep-bg': t.bgColor,
+              '--ep-accent': t.accentColor,
+            } as any}
+          >
+            <div className="ep-card-icon">{t.icon}</div>
+            <h3 className="ep-card-title">{t.title}</h3>
+            <p className="ep-card-desc">{t.desc}</p>
+            <ul className="ep-feature-list">
+              {t.features.map(f => (
+                <li key={f} className="ep-feature-item">
+                  <span className="ep-feat-dot" style={{ background: t.accentColor }} />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className={`ep-export-btn ${t.btnClass}`}
+              onClick={() => handleExport(t.key as 'pdf' | 'word' | 'excel')}
+            >
+              {t.btnLabel}
+            </button>
+          </section>
+        ))}
+      </div>
+
+      {/* ── Info footer ── */}
+      <section className="ep-info-card">
+        <div className="ep-info-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+            strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+          </svg>
+        </div>
+        <div className="ep-info-copy">
+          <strong>Your data is secure</strong>
+          <p>All exports are generated on-demand and are not stored. Files are downloaded directly to your device.</p>
+        </div>
+      </section>
+
+      <style>{`
+        .ep-shell { display: flex; flex-direction: column; gap: 1.1rem; }
+
+        .ep-page-head { padding: 0.25rem 0 0.5rem; }
+        .ep-title { margin: 0 0 0.3rem; font-size: 1.45rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+        .ep-sub { margin: 0; font-size: 0.86rem; color: rgba(255,255,255,0.5); }
+
+        .ep-cards-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 1rem;
+        }
+
+        .ep-card {
+          background: linear-gradient(180deg,rgba(25,24,42,0.98) 0%,rgba(18,17,34,0.98) 100%);
+          border: 1px solid var(--ep-border, rgba(255,255,255,0.08));
+          border-radius: 16px;
+          padding: 1.6rem 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.8rem;
+          transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .ep-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 14px 30px rgba(0,0,0,0.3);
+        }
+
+        .ep-card-icon { flex-shrink: 0; }
+
+        .ep-card-title {
+          margin: 0;
+          font-size: 1rem;
+          font-weight: 700;
+          color: #fff;
+        }
+        .ep-card-desc {
+          margin: 0;
+          font-size: 0.82rem;
+          color: rgba(255,255,255,0.5);
+          line-height: 1.55;
+        }
+
+        .ep-feature-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          flex: 1;
+        }
+        .ep-feature-item {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          font-size: 0.82rem;
+          color: rgba(255,255,255,0.62);
+        }
+        .ep-feat-dot {
+          width: 6px; height: 6px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+
+        .ep-export-btn {
+          width: 100%;
+          padding: 0.72em 1em;
+          border-radius: 10px;
+          border: none;
+          font-size: 0.9rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: opacity 0.15s, transform 0.15s;
+          margin-top: 0.25rem;
+        }
+        .ep-export-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+        .ep-btn-purple {
+          background: linear-gradient(90deg,#5c4de0,#6c5ce7);
+          color: #fff;
+          box-shadow: 0 4px 14px rgba(108,92,231,0.35);
+        }
+        .ep-btn-green {
+          background: linear-gradient(90deg,#059669,#10b981);
+          color: #fff;
+          box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+        }
+        .ep-btn-blue {
+          background: linear-gradient(90deg,#1d4ed8,#3b82f6);
+          color: #fff;
+          box-shadow: 0 4px 14px rgba(59,130,246,0.3);
+        }
+
+        /* Info card */
+        .ep-info-card {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.9rem;
+          padding: 1rem 1.25rem;
+          border-radius: 14px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.06);
+        }
+        .ep-info-icon {
+          width: 36px; height: 36px; border-radius: 10px;
+          background: rgba(108,92,231,0.15);
+          color: #c8b1ff;
+          display: inline-flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+        .ep-info-copy { display: flex; flex-direction: column; gap: 0.2rem; }
+        .ep-info-copy strong { font-size: 0.88rem; color: #fff; font-weight: 600; }
+        .ep-info-copy p { margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.48); line-height: 1.5; }
+
+        /* ── Light mode ── */
+        .app.light-mode .ep-title { color: var(--text-light,#2f2050); }
+        .app.light-mode .ep-sub { color: rgba(47,32,80,0.54); }
+        .app.light-mode .ep-card {
+          background: #fff;
+          box-shadow: 0 4px 14px rgba(108,92,231,0.07);
+        }
+        .app.light-mode .ep-card-title { color: var(--text-light,#2f2050); }
+        .app.light-mode .ep-card-desc { color: rgba(47,32,80,0.56); }
+        .app.light-mode .ep-feature-item { color: rgba(47,32,80,0.64); }
+        .app.light-mode .ep-info-card {
+          background: rgba(108,92,231,0.04);
+          border-color: rgba(108,92,231,0.1);
+        }
+        .app.light-mode .ep-info-copy strong { color: var(--text-light,#2f2050); }
+        .app.light-mode .ep-info-copy p { color: rgba(47,32,80,0.52); }
+
+        @media (max-width: 900px) {
+          .ep-cards-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+          .ep-title { font-size: 1.2rem; }
+        }
+      `}</style>
+    </div>
+  )
+}

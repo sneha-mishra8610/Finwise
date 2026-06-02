@@ -292,6 +292,33 @@
   height: 18px;
 }
 
+.sidebar-logout-btn {
+  position: fixed;
+  left: 1.5rem;
+  bottom: 1.25rem;
+  width: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 107, 107, 0.22);
+  background: rgba(255, 107, 107, 0.1);
+  color: #ff9a9a;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+  z-index: 20;
+}
+
+.sidebar-logout-btn:hover {
+  background: rgba(255, 107, 107, 0.16);
+  border-color: rgba(255, 107, 107, 0.38);
+  transform: translateY(-1px);
+}
+
 .main {
   flex: 1;
   display: flex;
@@ -360,6 +387,43 @@ select {
   color: #fff;
   font-size: 0.9rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+select,
+.app select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-color: rgba(255, 255, 255, 0.045) !important;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(245, 244, 255, 0.78) 50%),
+    linear-gradient(135deg, rgba(245, 244, 255, 0.78) 50%, transparent 50%),
+    linear-gradient(135deg, rgba(108, 92, 231, 0.22), rgba(108, 92, 231, 0.08)) !important;
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 12px) 50%,
+    100% 0 !important;
+  background-size:
+    6px 6px,
+    6px 6px,
+    2.65rem 100% !important;
+  background-repeat: no-repeat !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 10px !important;
+  color: rgba(245, 244, 255, 0.9) !important;
+  padding-right: 3rem !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+select:hover,
+.app select:hover {
+  border-color: rgba(108, 92, 231, 0.42) !important;
+  background-color: rgba(255, 255, 255, 0.065) !important;
+}
+
+select option,
+.app select option {
+  background: #1e1e30;
+  color: #f5f4ff;
 }
 
 input:focus,
@@ -979,6 +1043,27 @@ select:focus {
   background: #fff;
   color: var(--text-light);
   border-color: #cdbfff;
+}
+
+.app.light-mode select {
+  background-color: rgba(108, 92, 231, 0.055) !important;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(47, 32, 80, 0.78) 50%),
+    linear-gradient(135deg, rgba(47, 32, 80, 0.78) 50%, transparent 50%),
+    linear-gradient(135deg, rgba(108, 92, 231, 0.12), rgba(108, 92, 231, 0.04)) !important;
+  border-color: rgba(108, 92, 231, 0.18) !important;
+  color: var(--text-light) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 1px 2px rgba(108, 92, 231, 0.04) !important;
+}
+
+.app.light-mode select:hover {
+  background-color: rgba(108, 92, 231, 0.08) !important;
+  border-color: rgba(108, 92, 231, 0.32) !important;
+}
+
+.app.light-mode select option {
+  background: #ffffff;
+  color: var(--text-light);
 }
 
 .app.light-mode .muted {
@@ -2731,6 +2816,18 @@ select:focus {
 .app.light-mode .workspace-table-row:hover,
 .app.light-mode .workspace-table-row-active {
   background: rgba(108, 92, 231, 0.06);
+}
+
+.app.light-mode .workspace-table td,
+.app.light-mode .workspace-table td span,
+.app.light-mode .workspace-table td strong,
+.app.light-mode .workspace-table .positive,
+.app.light-mode .workspace-table .negative {
+  color: #000 !important;
+}
+
+.app.light-mode .workspace-load-more-btn {
+  color: #000;
 }
 
 @media (max-width: 1200px) {

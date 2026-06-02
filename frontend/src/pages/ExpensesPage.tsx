@@ -18,8 +18,8 @@ function getCatColor(cat: string) {
 
 export default function ExpensesPage(props: ExpensesPageProps) {
   const {
-    expenseStats, expensePageTitle, expenseFilterTabs, expenseViewFilter, setExpenseViewFilter,
-    filteredExpenseFeed, expensesPage, EXPENSES_PAGE_SIZE, expenseDetailView,
+    expenseStats, expenseFilterTabs, expenseViewFilter, setExpenseViewFilter,
+    filteredExpenseFeed, expensesPage, EXPENSES_PAGE_SIZE,
     expenseChats, expenseChatInputs, setExpenseChatInputs, editLogDisplayCount, setEditLogDisplayCount,
     currentUserId, currentUserName, users, groups, defaultCurrency, convertINR, getCurrencySymbol,
     setExpenseDetailView, setExpensesPage, handleSettleUp, startEditExpense, setShowExpenseModal,

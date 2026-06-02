@@ -18,8 +18,6 @@ export default function ActivityPage(props: ActivityPageProps) {
     currentUserId,
     getActivityTone,
     getActivityCategory,
-    getActivityBadge,
-    formatRelativeTime,
   } = props
 
   // Map category to color/label/icon

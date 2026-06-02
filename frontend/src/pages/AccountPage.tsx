@@ -37,14 +37,13 @@ export default function AccountPage(props: AccountPageProps) {
     handleEditProfileSubmit,
     openEditProfileModal, openPasswordModal,
     totalPaid, totalReceived, netSummary,
-    settlementRate, avgSettlementDays, memberSince,
+    settlementRate, avgSettlementDays,
     sessionItems,
     settlementRemindersEnabled, reminderDelayDays,
     handleToggleSettlementReminders, handleReminderDelayChange,
     defaultSplitMethod, setDefaultSplitMethod,
     accountThemePreference, setAccountThemePreference, setTheme,
     twoFactorEnabled, setTwoFactorEnabled,
-    handleExport,
   } = props
 
   const sym = getCurrencySymbol(defaultCurrency)

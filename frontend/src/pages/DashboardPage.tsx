@@ -28,7 +28,6 @@ export default function DashboardPage(props: DashboardPageProps) {
     dashboardCategoryMix,
     recentDashboardActivities,
     getCurrencySymbol,
-    getCategoryColor,
     authedFetch,
     API_BASE,
     currentUserId,

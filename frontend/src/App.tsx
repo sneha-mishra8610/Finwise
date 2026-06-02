@@ -12,7 +12,7 @@ import BudgetPage from './pages/BudgetPage'
 import ExportPage from './pages/ExportPage'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD
-  ? 'https://splitwise-clone-gxkq.onrender.com/api'
+  ? 'https://finwise-api-rrjv.onrender.com/'
   : 'http://localhost:8080/api')
 
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 20000) {

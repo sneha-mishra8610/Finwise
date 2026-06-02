@@ -4,7 +4,6 @@ export type GroupsPageProps = Record<string, any>
 
 export default function GroupsPage(props: GroupsPageProps) {
   const {
-    sortedGroups,
     groupOverview,
     showCreateGroupPanel,
     setShowCreateGroupPanel,
@@ -21,14 +20,12 @@ export default function GroupsPage(props: GroupsPageProps) {
     handleUpdateGroup,
     toggleEditGroupMember,
     startEditGroup,
-    handleDeleteGroup,
     groupInvitations,
     handleAcceptGroupInvitation,
     handleDeclineGroupInvitation,
     users,
     setGroupDetailView,
     setExpenseDetailView,
-    renderWorkspaceDashboard,
     resetExpenseForm,
     setEditingExpense,
     setIsGroupExpense,

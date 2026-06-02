@@ -3,8 +3,6 @@ export type BudgetPageProps = Record<string, any>
 
 export default function BudgetPage(props: BudgetPageProps) {
   const {
-    currentUser,
-    defaultCurrency,
     convertINR,
     getCurrencySymbol,
     selectedBudgetPeriod,
@@ -22,17 +20,13 @@ export default function BudgetPage(props: BudgetPageProps) {
     budgetSummaries,
     allExpenses,
     getBudgetPeriodMeta,
-    getPreviousPeriodDate,
   } = props
-
-  const sym = getCurrencySymbol(defaultCurrency)
   const fmt = (n: number) =>
     `${getCurrencySymbol(budgetSummaryCurrency)}${convertINR(Math.abs(n), budgetSummaryCurrency).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   // Build budget history from summaries or fake from past periods
   const now = new Date()
   const historyRows: { month: string; budget: number; used: number; left: number }[] = []
-  const periods = ['MONTHLY'] // only show monthly history
   for (let i = 0; i < 6; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
     const meta = getBudgetPeriodMeta ? getBudgetPeriodMeta('MONTHLY', d) : null

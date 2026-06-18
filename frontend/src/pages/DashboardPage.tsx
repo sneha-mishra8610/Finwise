@@ -760,7 +760,6 @@ export default function DashboardPage(props: DashboardPageProps) {
       {/* ── Hero ── */}
       <div className="dv2-hero">
         <div className="dv2-hero-text">
-          <p className="dv2-eyebrow">Finwise / Dashboard</p>
           <h2 className="dv2-hero-title">
             {greeting}, {currentUser.name} 👋
           </h2>

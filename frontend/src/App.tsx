@@ -13,7 +13,7 @@ import ExportPage from './pages/ExportPage'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD
   ? 'https://finwise-api-rrjv.onrender.com/'
-  : 'http://localhost:8080/api')
+  : 'http://localhost:9090/api')
 
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 20000) {
   const controller = new AbortController()
@@ -100,9 +100,11 @@ type Activity = {
   id: string
   description: string
   createdAt: string
+  type?: 'FRIEND_ADDED' | 'GROUP_CREATED' | 'EXPENSE_ADDED' | 'EXPENSE_UPDATED' | 'EXPENSE_DELETED' | 'EXPENSE_SETTLED' | 'EXPENSE_OWED' | 'SETTLEMENT_REMINDER'
+  notificationType?: 'OWE' | 'OWED'
 }
 
-type ActivityFilter = 'ALL' | 'EXPENSE' | 'SETTLEMENT' | 'GROUP' | 'FRIEND'
+type ActivityFilter = 'ALL' | 'EXPENSE' | 'SETTLEMENT' | 'GROUP' | 'FRIEND' | 'REMINDER'
 type ActivitySortOrder = 'NEWEST' | 'OLDEST'
 type DashboardMixMode = 'TYPE' | 'CATEGORY'
 type AppTab = 'Home' | 'Groups' | 'Expenses' | 'Friends' | 'Activity' | 'Budget' | 'Export' | 'Account'
@@ -488,7 +490,7 @@ function App() {
   const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([])
   const [groupInvitations, setGroupInvitations] = useState<PendingInvitation[]>([])
   const [friendInvitations, setFriendInvitations] = useState<PendingInvitation[]>([])
-
+  const [notifTab, setNotifTab] = useState<'all'|'read'>('all')
   const isAuthenticated = !!authToken
 
   const dashboardPeriodMeta = getBudgetPeriodMeta(dashboardPeriod, new Date())
@@ -790,6 +792,7 @@ function App() {
   }
 
   function getActivityCategory(activity: Activity): Exclude<ActivityFilter, 'ALL'> {
+    if (activity.type === 'SETTLEMENT_REMINDER') return 'REMINDER'
     const d = activity.description.toLowerCase()
     if (d.includes('settle') || d.includes('you owe') || d.includes('owes you')) return 'SETTLEMENT'
     if (d.includes('group')) return 'GROUP'
@@ -809,6 +812,7 @@ function App() {
     if (cat === 'SETTLEMENT') return 'ST'
     if (cat === 'GROUP') return 'GR'
     if (cat === 'FRIEND') return 'FR'
+    if (cat === 'REMINDER') return 'RM'
     return 'EX'
   }
 
@@ -1380,6 +1384,21 @@ function App() {
 
   // ── Notification handlers ─────────────────────────────────────────────────
 
+  function getNotificationTitle(type: string): string {
+    switch (type) {
+      case 'OWED': return 'You are owed';
+      case 'OWE': return 'You owe';
+      case 'FRIEND_ADDED': return 'Friend Added';
+      case 'GROUP_CREATED': return 'Group Created';
+      case 'EXPENSE_ADDED': return 'Expense Added';
+      case 'EXPENSE_UPDATED': return 'Expense Updated';
+      case 'EXPENSE_DELETED': return 'Expense Deleted';
+      case 'EXPENSE_SETTLED': return 'Expense Settled';
+      case 'EXPENSE_OWED': return 'You owe';
+      default: return 'Notification';
+    }
+  }
+
   const markNotificationsAsRead = useCallback(async (ids: string[]) => {
     if (!currentUserId || !ids.length) return
     try {
@@ -1509,6 +1528,7 @@ function App() {
     { key: 'SETTLEMENT' as ActivityFilter, label: 'Settlements', count: activities.filter(a => getActivityCategory(a) === 'SETTLEMENT').length },
     { key: 'GROUP' as ActivityFilter, label: 'Groups', count: activities.filter(a => getActivityCategory(a) === 'GROUP').length },
     { key: 'FRIEND' as ActivityFilter, label: 'Friends', count: activities.filter(a => getActivityCategory(a) === 'FRIEND').length },
+    { key: 'REMINDER' as ActivityFilter, label: 'Reminders', count: activities.filter(a => getActivityCategory(a) === 'REMINDER').length },
   ]
 
   const activityGroups = filteredActivities.reduce<Array<{ key: string; label: string; items: Activity[] }>>((acc, activity) => {
@@ -1526,6 +1546,7 @@ function App() {
     visible: filteredActivities.length,
     settlements: activities.filter(a => getActivityCategory(a) === 'SETTLEMENT').length,
     expenses: activities.filter(a => getActivityCategory(a) === 'EXPENSE').length,
+    reminders: activities.filter(a => getActivityCategory(a) === 'REMINDER').length,
   }
 
   const dashboardAnalytics = (() => {
@@ -1894,7 +1915,7 @@ function App() {
       <header className="app-header">
         <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button className="theme-toggle" onClick={() => setTheme(p => p === 'dark' ? 'light' : 'dark')} aria-label="Toggle theme">🌙</button>
-          <h1 style={{ margin: 0 }}>Finwise</h1>
+          <h1 style={{ margin: 0 }}>FinWise</h1>
         </div>
         <div className="header-center">
           {['Groups', 'Friends', 'Activity'].includes(activeTab) && !groupDetailView && !friendDetailView && (
@@ -1916,50 +1937,153 @@ function App() {
         </div>
       </header>
 
-      {/* Notification modal */}
       {showNotifications && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="panel" style={{ minWidth: 320, maxWidth: 400 }}>
-            <h2>Notifications</h2>
-            {loadingNotifications ? <div>Loading...</div>
-              : notificationError ? <div className="error-text">{notificationError}</div>
-                : unreadNotifications.length === 0 && readNotifications.length === 0 ? <div>No notifications available.</div>
-                  : (
-                    <div style={{ maxHeight: 360, overflowY: 'auto' }}>
-                      {unreadNotifications.length > 0 && (
-                        <>
-                          <div style={{ fontWeight: 700, marginBottom: 8 }}>Unread</div>
-                          <ul className="card-list" style={{ marginBottom: 12 }}>
-                            {unreadNotifications.map((n, i) => (
-                              <li key={n.id ?? `${n.type}-${i}`} className="card" style={{ marginBottom: 12, borderLeft: '4px solid #2563eb', background: '#eef4ff' }}>
-                                <strong>{n.type === 'OWED' ? 'You are owed' : 'You owe'}</strong><br />{n.message}<br />
-                                <span className="muted">{(n.lastSent || n.createdAt) ? new Date((n.lastSent || n.createdAt) as string).toLocaleString() : 'Recently'}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </>
+        <div className="notif-overlay" onClick={() => setShowNotifications(false)}>
+          <div className="notif-modal" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+
+            {/* Header */}
+            <div className="notif-header">
+              <div className="notif-header-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+              </div>
+              <h2 className="notif-header-title">Notifications</h2>
+              <button className="notif-close-btn" onClick={() => setShowNotifications(false)} aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="notif-tabs-row">
+              <button
+                className={notifTab === 'all' ? 'notif-tab notif-tab-active' : 'notif-tab'}
+                onClick={() => setNotifTab('all')}
+              >
+                All
+              </button>
+              <button
+                className={notifTab === 'read' ? 'notif-tab notif-tab-active' : 'notif-tab'}
+                onClick={() => setNotifTab('read')}
+              >
+                Read
+              </button>
+              {unreadNotifications.length > 0 && (
+                <button
+                  className="notif-mark-read"
+                  onClick={() => {
+                    const ids = unreadNotifications.filter(n => n?.id).map(n => n.id)
+                    if (ids.length) {
+                      setReadNotifications(prev => [...unreadNotifications.map(n => ({ ...n, read: true })), ...prev])
+                      setUnreadNotifications([])
+                      void markNotificationsAsRead(ids)
+                    }
+                  }}
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
+
+            {/* Content */}
+            {loadingNotifications ? (
+              <div className="notif-loading">Loading notifications…</div>
+            ) : notificationError ? (
+              <div className="notif-loading" style={{ color: '#ff7a7a' }}>{notificationError}</div>
+            ) : (
+              <>
+                {/* UNREAD section — show in "All" tab only */}
+                {notifTab === 'all' && unreadNotifications.length > 0 && (
+                  <>
+                    <div className="notif-section-label">UNREAD</div>
+                    <div className="notif-scroll">
+                      {unreadNotifications.map((n, i) => (
+                        <div key={n.id ?? `unread-${i}`} className="notif-item notif-item-unread">
+                          <div className="notif-unread-dot" />
+                          <div className="notif-item-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                              <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                          </div>
+                          <div className="notif-item-body">
+                            <div className="notif-item-title">{getNotificationTitle(n.type)}</div>
+                            <div className="notif-item-msg">{n.message}</div>
+                            <div className="notif-item-time">
+                              {(n.lastSent || n.createdAt)
+                                ? new Date((n.lastSent || n.createdAt) as string).toLocaleString()
+                                : 'Recently'}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* READ section */}
+                {(notifTab === 'read' || (notifTab === 'all' && readNotifications.length > 0)) && (
+                  <>
+                    <div className="notif-section-label">READ</div>
+                    <div className="notif-scroll">
+                      {readNotifications.length === 0 ? (
+                        <div className="notif-empty">No read notifications.</div>
+                      ) : (
+                        readNotifications.map((n, i) => (
+                          <div key={n.id ?? `read-${i}`} className="notif-item">
+                            <div className="notif-read-dot" />
+                            <div className="notif-item-icon">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                              </svg>
+                            </div>
+                            <div className="notif-item-body">
+                              <div className="notif-item-title">{getNotificationTitle(n.type)}</div>
+                              <div className="notif-item-msg">{n.message}</div>
+                              <div className="notif-item-time">
+                                {(n.lastSent || n.createdAt)
+                                  ? new Date((n.lastSent || n.createdAt) as string).toLocaleString()
+                                  : 'Recently'}
+                              </div>
+                            </div>
+                          </div>
+                        ))
                       )}
-                      {readNotifications.length > 0 && (
-                        <>
-                          <div style={{ fontWeight: 700, marginBottom: 8 }}>Read</div>
-                          <ul className="card-list" style={{ marginBottom: 12 }}>
-                            {readNotifications.map((n, i) => (
-                              <li key={n.id ?? `${n.type}-${i}`} className="card" style={{ marginBottom: 12, opacity: 0.85 }}>
-                                <strong>{n.type === 'OWED' ? 'You are owed' : 'You owe'}</strong><br />{n.message}<br />
-                                <span className="muted">{(n.lastSent || n.createdAt) ? new Date((n.lastSent || n.createdAt) as string).toLocaleString() : 'Recently'}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          {hasMoreReadNotifications && (
-                            <button className="icon-btn" onClick={handleLoadMoreReadNotifications} disabled={loadingMoreReadNotifications}>
-                              {loadingMoreReadNotifications ? 'Loading...' : 'Load more'}
-                            </button>
-                          )}
-                        </>
+                      {hasMoreReadNotifications && (
+                        <div className="notif-load-more">
+                          <button className="notif-load-btn" onClick={handleLoadMoreReadNotifications} disabled={loadingMoreReadNotifications}>
+                            {loadingMoreReadNotifications ? 'Loading…' : 'Load more'}
+                          </button>
+                        </div>
                       )}
                     </div>
-                  )}
-            <button className="icon-btn" style={{ marginTop: 16 }} onClick={() => setShowNotifications(false)}>Close</button>
+                  </>
+                )}
+
+                {/* Truly empty */}
+                {notifTab === 'all' && unreadNotifications.length === 0 && readNotifications.length === 0 && (
+                  <div className="notif-empty">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(162,155,254,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    You're all caught up!
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Footer */}
+            <div className="notif-footer">
+              <button className="notif-footer-close" onClick={() => setShowNotifications(false)}>
+                Close
+              </button>
+            </div>
+
           </div>
         </div>
       )}
@@ -2344,42 +2468,119 @@ function App() {
 
       {/* Quick group chat modal */}
       {showQuickGroupChat && (groupDetailView || expenseDetailView) && (
-        <div className="modal-overlay" onClick={() => setShowQuickGroupChat(false)}>
-          <div className="modal quick-chat-modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header"><h2>Group chat</h2><button className="modal-close" onClick={() => setShowQuickGroupChat(false)}>✕</button></div>
-            {groupDetailView ? (
-              <div className="quick-chat-group-label">
-                <span className="field-label">Current group</span>
-                <strong>{groups.find(g => g.id === groupDetailView)?.name || 'Group'}</strong>
-              </div>
-            ) : (
-              <div className="form-vertical">
-                <label className="field-label">Select group</label>
-                <select value={quickChatGroupId} onChange={e => setQuickChatGroupId(e.target.value)}>
-                  {groups.filter(g => (g.memberIds || []).includes(currentUserId)).map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                </select>
-              </div>
-            )}
-            <div className="quick-chat-messages">
-              {quickChatGroupId && (groupChats[quickChatGroupId] || []).length === 0 && <div className="muted">No messages yet.</div>}
-              {!quickChatGroupId && <div className="muted">No groups available for chat.</div>}
-              {quickChatGroupId && (groupChats[quickChatGroupId] || []).map((msg, i) => (
-                <div key={i} className="quick-chat-message">
-                  <span className={msg.user === currentUserName ? 'expense-chat-user expense-chat-user-self' : 'expense-chat-user'}>{msg.user}</span>
-                  <span>{msg.message}</span>
-                  <div className="muted" style={{ fontSize: '0.7rem' }}>{new Date(msg.timestamp).toLocaleTimeString()}</div>
-                </div>
-              ))}
+        <div className="gchat-overlay" onClick={() => setShowQuickGroupChat(false)}>
+          <div className="gchat-modal" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+
+            {/* Header */}
+            <div className="gchat-header">
+              <h2 className="gchat-title">Group chat</h2>
+              <button className="gchat-close" onClick={() => setShowQuickGroupChat(false)} aria-label="Close">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
             </div>
-            <div className="quick-chat-composer">
-              <input type="text" value={groupChatInputs[quickChatGroupId] || ''}
-                onChange={e => setGroupChatInputs(prev => ({ ...prev, [quickChatGroupId]: e.target.value }))}
+
+            {/* Group selector */}
+            <div className="gchat-group-row">
+              <span className="gchat-group-label">Group</span>
+              {groupDetailView ? (
+                <div className="gchat-group-select-display">
+                  {groups.find((g: any) => g.id === groupDetailView)?.name || 'Group'}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </div>
+              ) : (
+                <select
+                  className="gchat-group-select"
+                  value={quickChatGroupId}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setQuickChatGroupId(e.target.value)}
+                >
+                  {groups.filter((g: any) => (g.memberIds || []).includes(currentUserId)).map((g: any) => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div className="gchat-divider" />
+
+            {/* Messages */}
+            <div className="gchat-messages">
+              {!quickChatGroupId && (
+                <div className="gchat-empty">No groups available for chat.</div>
+              )}
+              {quickChatGroupId && (groupChats[quickChatGroupId] || []).length === 0 && (
+                <div className="gchat-empty">No messages yet. Say hello! 👋</div>
+              )}
+              {quickChatGroupId && (groupChats[quickChatGroupId] || []).map((msg: any, i: number) => {
+                const isSelf = msg.user === currentUserName
+                // Get initials from name
+                const initials = msg.user.split(' ').filter(Boolean).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join('')
+                // Deterministic avatar color from name
+                const avatarColors = ['#6c5ce7', '#0984e3', '#00b894', '#d63031', '#e17055', '#fdcb6e', '#a29bfe', '#fd79a8']
+                const colorIdx = msg.user.split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), 0) % avatarColors.length
+                const avatarBg = avatarColors[colorIdx]
+
+                return (
+                  <div key={i} className={isSelf ? 'gchat-row gchat-row-self' : 'gchat-row gchat-row-other'}>
+                    {!isSelf && (
+                      <div className="gchat-avatar" style={{ background: avatarBg }}>
+                        {initials}
+                      </div>
+                    )}
+                    <div className="gchat-bubble-wrap">
+                      {!isSelf && <div className="gchat-sender">{msg.user}</div>}
+                      <div className={isSelf ? 'gchat-bubble gchat-bubble-self' : 'gchat-bubble gchat-bubble-other'}>
+                        <span className="gchat-msg-text">{msg.message}</span>
+                        <div className="gchat-msg-meta">
+                          <span className="gchat-msg-time">
+                            {(() => {
+                              try {
+                                return new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                              } catch {
+                                return msg.timestamp
+                              }
+                            })()}
+                          </span>
+                          {isSelf && (
+                            <svg className="gchat-tick" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 6L9 17l-5-5"/>
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Composer */}
+            <div className="gchat-composer">
+              <input
+                className="gchat-input"
+                type="text"
+                value={groupChatInputs[quickChatGroupId] || ''}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGroupChatInputs((prev: any) => ({ ...prev, [quickChatGroupId]: e.target.value }))}
                 placeholder="Type a message..."
-                onKeyDown={e => { if (e.key === 'Enter' && quickChatGroupId) handleSendGroupChatMessage(quickChatGroupId) }}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' && quickChatGroupId) handleSendGroupChatMessage(quickChatGroupId)
+                }}
                 disabled={!quickChatGroupId}
               />
-              <button type="button" onClick={() => quickChatGroupId && handleSendGroupChatMessage(quickChatGroupId)} disabled={!quickChatGroupId || !(groupChatInputs[quickChatGroupId]?.trim())}>Send</button>
+              <button
+                className="gchat-send"
+                type="button"
+                onClick={() => quickChatGroupId && handleSendGroupChatMessage(quickChatGroupId)}
+                disabled={!quickChatGroupId || !(groupChatInputs[quickChatGroupId]?.trim())}
+              >
+                Send
+              </button>
             </div>
+
           </div>
         </div>
       )}

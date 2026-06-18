@@ -3909,3 +3909,848 @@ select:focus {
   box-shadow: 0 14px 28px rgba(108, 92, 231, 0.12) !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   GROUP CHAT MODAL  — add these styles to App.css
+   (you can delete or keep the old .quick-chat-* rules — they won't conflict)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay ── */
+.gchat-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+/* ── Modal shell ── */
+.gchat-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #16162a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 28px 64px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Header ── */
+.gchat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.15rem 1.3rem 1rem;
+  flex-shrink: 0;
+}
+
+.gchat-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.gchat-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.gchat-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* ── Group selector row ── */
+.gchat-group-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.3rem 0.9rem;
+  flex-shrink: 0;
+}
+
+.gchat-group-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+}
+
+.gchat-group-select-display {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5em 0.85em;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.gchat-group-select {
+  flex: 1;
+  padding: 0.5em 0.85em;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+}
+
+.gchat-group-select option {
+  background: #1e1e30;
+}
+
+/* ── Divider ── */
+.gchat-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* ── Messages area ── */
+.gchat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 320px;
+  max-height: 460px;
+  scroll-behavior: smooth;
+}
+
+.gchat-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.gchat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gchat-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+}
+
+.gchat-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.35);
+  text-align: center;
+}
+
+/* ── Message rows ── */
+.gchat-row {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-end;
+}
+
+.gchat-row-self {
+  flex-direction: row-reverse;
+}
+
+.gchat-row-other {
+  flex-direction: row;
+}
+
+/* ── Avatar ── */
+.gchat-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+/* ── Bubble wrapper ── */
+.gchat-bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  max-width: 72%;
+}
+
+.gchat-row-self .gchat-bubble-wrap {
+  align-items: flex-end;
+}
+
+.gchat-sender {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #a29bfe;
+  padding-left: 0.1rem;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Bubbles ── */
+.gchat-bubble {
+  padding: 0.65rem 0.9rem;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  word-break: break-word;
+}
+
+.gchat-bubble-other {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom-left-radius: 4px;
+}
+
+.gchat-bubble-self {
+  background: #6c5ce7;
+  border: none;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 14px rgba(108, 92, 231, 0.38);
+}
+
+.gchat-msg-text {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.gchat-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-content: flex-end;
+}
+
+.gchat-msg-time {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'DM Mono', monospace;
+  white-space: nowrap;
+}
+
+.gchat-bubble-self .gchat-msg-time {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.gchat-tick {
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+/* ── Composer ── */
+.gchat-composer {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.9rem 1.3rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: #16162a;
+  flex-shrink: 0;
+}
+
+.gchat-input {
+  flex: 1;
+  padding: 0.65em 1em;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 0.9rem;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.gchat-input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.gchat-input:focus {
+  border-color: rgba(108, 92, 231, 0.5);
+  background: rgba(108, 92, 231, 0.06);
+}
+
+.gchat-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.gchat-send {
+  padding: 0.65em 1.35em;
+  border-radius: 12px;
+  border: none;
+  background: #6c5ce7;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(108, 92, 231, 0.38);
+  transition: background 0.15s, transform 0.12s, opacity 0.15s;
+}
+
+.gchat-send:hover:not(:disabled) {
+  background: #5b4bd6;
+  transform: translateY(-1px);
+}
+
+.gchat-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Light mode ── */
+.app.light-mode .gchat-modal {
+  background: #ffffff;
+  border-color: rgba(108, 92, 231, 0.14);
+  box-shadow: 0 24px 60px rgba(108, 92, 231, 0.15);
+}
+
+.app.light-mode .gchat-title {
+  color: #1a1040;
+}
+
+.app.light-mode .gchat-close {
+  background: rgba(108, 92, 231, 0.07);
+  color: rgba(47, 32, 80, 0.55);
+}
+
+.app.light-mode .gchat-close:hover {
+  background: rgba(108, 92, 231, 0.14);
+  color: #1a1040;
+}
+
+.app.light-mode .gchat-group-label {
+  color: rgba(47, 32, 80, 0.48);
+}
+
+.app.light-mode .gchat-group-select-display {
+  background: rgba(108, 92, 231, 0.05);
+  border-color: rgba(108, 92, 231, 0.16);
+  color: #1a1040;
+}
+
+.app.light-mode .gchat-group-select {
+  background: rgba(108, 92, 231, 0.05);
+  border-color: rgba(108, 92, 231, 0.16);
+  color: #1a1040;
+}
+
+.app.light-mode .gchat-group-select option {
+  background: #fff;
+  color: #1a1040;
+}
+
+.app.light-mode .gchat-divider {
+  background: rgba(108, 92, 231, 0.1);
+}
+
+.app.light-mode .gchat-messages {
+  background: #f9f7ff;
+}
+
+.app.light-mode .gchat-empty {
+  color: rgba(47, 32, 80, 0.38);
+}
+
+.app.light-mode .gchat-bubble-other {
+  background: #ffffff;
+  border-color: rgba(108, 92, 231, 0.12);
+  box-shadow: 0 1px 4px rgba(108, 92, 231, 0.07);
+}
+
+.app.light-mode .gchat-bubble-other .gchat-msg-text {
+  color: #1a1040;
+}
+
+.app.light-mode .gchat-bubble-other .gchat-msg-time {
+  color: rgba(47, 32, 80, 0.42);
+}
+
+.app.light-mode .gchat-composer {
+  background: #ffffff;
+  border-top-color: rgba(108, 92, 231, 0.1);
+}
+
+.app.light-mode .gchat-input {
+  background: #f3f0ff;
+  border-color: rgba(108, 92, 231, 0.16);
+  color: #1a1040;
+}
+
+.app.light-mode .gchat-input::placeholder {
+  color: rgba(47, 32, 80, 0.3);
+}
+
+.app.light-mode .gchat-input:focus {
+  border-color: rgba(108, 92, 231, 0.45);
+  background: rgba(108, 92, 231, 0.04);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .gchat-modal {
+    max-height: 95vh;
+    border-radius: 16px 16px 0 0;
+    align-self: flex-end;
+  }
+
+  .gchat-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .gchat-messages {
+    min-height: 260px;
+  }
+
+  .gchat-bubble-wrap {
+    max-width: 85%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOTIFICATIONS MODAL  — add to App.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Overlay */
+.notif-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+/* Modal */
+.notif-modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #16162a;
+  border: 1px solid rgba(255,255,255,0.09);
+  box-shadow: 0 28px 64px rgba(0,0,0,0.6);
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Header row */
+.notif-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.15rem 1.3rem 0.9rem;
+  flex-shrink: 0;
+}
+.notif-header-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(108,92,231,0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a29bfe;
+  flex-shrink: 0;
+}
+.notif-header-title {
+  flex: 1;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+.notif-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: none;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.notif-close-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+/* Tabs row */
+.notif-tabs-row {
+  display: flex;
+  align-items: center;
+  padding: 0 1.3rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  gap: 0;
+  flex-shrink: 0;
+}
+.notif-tab {
+  padding: 0.65rem 1rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+.notif-tab:hover { color: rgba(255,255,255,0.75); }
+.notif-tab-active {
+  color: #fff;
+  border-bottom-color: #6c5ce7;
+}
+.notif-mark-read {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6c5ce7;
+  cursor: pointer;
+  padding: 0.65rem 0;
+  font-family: 'DM Sans', sans-serif;
+  transition: color 0.15s;
+}
+.notif-mark-read:hover { color: #a29bfe; }
+
+/* Section label */
+.notif-section-label {
+  padding: 0.85rem 1.3rem 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: rgba(255,255,255,0.35);
+  flex-shrink: 0;
+}
+
+/* Scroll area */
+.notif-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 1rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 180px;
+}
+.notif-scroll::-webkit-scrollbar { width: 4px; }
+.notif-scroll::-webkit-scrollbar-track { background: transparent; }
+.notif-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* Notification item */
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.15s;
+  position: relative;
+}
+.notif-item:hover { background: rgba(255,255,255,0.07); }
+.notif-item-unread { border-color: rgba(108,92,231,0.25); background: rgba(108,92,231,0.07); }
+
+/* Unread dot */
+.notif-unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6c5ce7;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+.notif-read-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+/* Item icon */
+.notif-item-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: rgba(108,92,231,0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a29bfe;
+  flex-shrink: 0;
+}
+
+/* Item body */
+.notif-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.22rem; }
+.notif-item-title { font-size: 0.9rem; font-weight: 700; color: #fff; }
+.notif-item-msg { font-size: 0.82rem; color: rgba(255,255,255,0.65); line-height: 1.45; }
+.notif-item-time { font-size: 0.72rem; color: rgba(255,255,255,0.35); font-family: 'DM Mono', monospace; }
+
+/* Empty state */
+.notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: rgba(255,255,255,0.35);
+  font-size: 0.86rem;
+}
+
+/* Loading */
+.notif-loading {
+  padding: 2rem;
+  text-align: center;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.86rem;
+}
+
+/* Load more */
+.notif-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+}
+.notif-load-btn {
+  padding: 0.42em 1.2em;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.6);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+.notif-load-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
+
+/* Footer close button */
+.notif-footer {
+  padding: 0.9rem 1rem;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+.notif-footer-close {
+  width: 100%;
+  padding: 0.72em;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.82);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: background 0.15s;
+}
+.notif-footer-close:hover { background: rgba(255,255,255,0.1); }
+
+/* ── Light mode ── */
+.app.light-mode .notif-modal {
+  background: #ffffff;
+  border-color: rgba(108,92,231,0.12);
+  box-shadow: 0 24px 56px rgba(108,92,231,0.14);
+}
+.app.light-mode .notif-header-title { color: #1a1040; }
+.app.light-mode .notif-close-btn { background: rgba(108,92,231,0.07); color: rgba(47,32,80,0.55); }
+.app.light-mode .notif-close-btn:hover { background: rgba(108,92,231,0.14); color: #1a1040; }
+.app.light-mode .notif-tabs-row { border-color: rgba(108,92,231,0.1); }
+.app.light-mode .notif-tab { color: rgba(47,32,80,0.48); }
+.app.light-mode .notif-tab:hover { color: rgba(47,32,80,0.75); }
+.app.light-mode .notif-tab-active { color: #1a1040; border-bottom-color: #6c5ce7; }
+.app.light-mode .notif-section-label { color: rgba(47,32,80,0.38); }
+.app.light-mode .notif-item {
+  background: #f9f7ff;
+  border-color: rgba(108,92,231,0.1);
+}
+.app.light-mode .notif-item:hover { background: #f2edff; }
+.app.light-mode .notif-item-unread { background: rgba(108,92,231,0.07); border-color: rgba(108,92,231,0.22); }
+.app.light-mode .notif-item-icon { background: rgba(108,92,231,0.12); }
+.app.light-mode .notif-item-title { color: #1a1040; }
+.app.light-mode .notif-item-msg { color: rgba(47,32,80,0.68); }
+.app.light-mode .notif-item-time { color: rgba(47,32,80,0.38); }
+.app.light-mode .notif-empty { color: rgba(47,32,80,0.38); }
+.app.light-mode .notif-loading { color: rgba(47,32,80,0.4); }
+.app.light-mode .notif-footer { border-color: rgba(108,92,231,0.1); }
+.app.light-mode .notif-footer-close {
+  background: rgba(108,92,231,0.06);
+  border-color: rgba(108,92,231,0.14);
+  color: rgba(47,32,80,0.82);
+}
+.app.light-mode .notif-footer-close:hover { background: rgba(108,92,231,0.12); }
+
+@media (max-width:520px) {
+  .notif-modal { max-height:95vh; border-radius:16px 16px 0 0; }
+  .notif-overlay { align-items:flex-end; padding:0; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EXPENSE CHAT  (inside the expense dialog in ExpensesPage)
+   Replace existing .ep-chat-* rules with these
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.ep-chat-panel { display:flex; flex-direction:column; gap:0.6rem; }
+
+.ep-chat-messages {
+  max-height: 220px;
+  overflow-y: auto;
+  background: rgba(10,10,22,0.55);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 0.85rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.ep-chat-messages::-webkit-scrollbar { width: 3px; }
+.ep-chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius:2px; }
+
+/* Row: other vs self */
+.ep-chat-row { display:flex; align-items:flex-end; gap:0.5rem; }
+.ep-chat-row-self { flex-direction:row-reverse; }
+.ep-chat-row-other { flex-direction:row; }
+
+/* Avatar */
+.ep-chat-avatar {
+  width:28px; height:28px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.62rem; font-weight:700; color:#fff;
+  flex-shrink:0;
+}
+
+/* Bubble wrapper */
+.ep-chat-bwrap { display:flex; flex-direction:column; gap:0.18rem; max-width:78%; }
+.ep-chat-row-self .ep-chat-bwrap { align-items:flex-end; }
+
+.ep-chat-sender {
+  font-size:0.68rem; font-weight:700; color:#a29bfe;
+  padding-left:0.1rem; font-family:'DM Sans',sans-serif;
+}
+
+/* Bubbles */
+.ep-chat-bubble {
+  padding:0.5rem 0.75rem;
+  border-radius:12px;
+  display:flex; flex-direction:column; gap:0.22rem;
+  word-break:break-word;
+}
+.ep-chat-bubble-other {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-bottom-left-radius: 3px;
+}
+.ep-chat-bubble-self {
+  background: #6c5ce7;
+  border-bottom-right-radius: 3px;
+  box-shadow: 0 3px 10px rgba(108,92,231,0.35);
+}
+
+.ep-chat-text { font-size:0.82rem; line-height:1.45; color:#fff; font-family:'DM Sans',sans-serif; }
+
+.ep-chat-meta { display:flex; align-items:center; gap:0.25rem; justify-content:flex-end; }
+.ep-chat-time {
+  font-size:0.62rem; color:rgba(255,255,255,0.45);
+  font-family:'DM Mono',monospace; white-space:nowrap;
+}
+.ep-chat-bubble-self .ep-chat-time { color:rgba(255,255,255,0.6); }
+.ep-chat-tick { color:rgba(255,255,255,0.55); flex-shrink:0; }
+
+/* Composer */
+.ep-chat-composer {
+  display:flex; gap:0.5rem;
+}
+.ep-chat-composer input {
+  flex:1; padding:0.58em 0.85em;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.05);
+  color:#fff; font-size:0.84rem;
+  font-family:'DM Sans',sans-serif; outline:none;
+  transition:border-color 0.15s, background 0.15s;
+}
+.ep-chat-composer input::placeholder { color:rgba(255,255,255,0.25); }
+.ep-chat-composer input:focus { border-color:rgba(108,92,231,0.5); background:rgba(108,92,231,0.06); }
+.ep-chat-composer button {
+  padding:0.58em 1em;
+  border-radius:10px; border:none;
+  background:#6c5ce7; color:#fff;
+  font-size:0.82rem; font-weight:700;
+  font-family:'DM Sans',sans-serif; cursor:pointer;
+  transition:background 0.15s;
+}
+.ep-chat-composer button:hover:not(:disabled) { background:#5b4bd6; }
+.ep-chat-composer button:disabled { opacity:0.45; cursor:not-allowed; }
+
+/* Light mode expense chat */
+.app.light-mode .ep-chat-messages {
+  background: #f9f7ff;
+  border-color: rgba(108,92,231,0.1);
+}
+.app.light-mode .ep-chat-bubble-other {
+  background:#fff; border-color:rgba(108,92,231,0.12);
+}
+.app.light-mode .ep-chat-bubble-other .ep-chat-text { color:#1a1040; }
+.app.light-mode .ep-chat-bubble-other .ep-chat-time { color:rgba(47,32,80,0.4); }
+.app.light-mode .ep-chat-sender { color:#6c5ce7; }
+.app.light-mode .ep-chat-composer input {
+  background:#f3f0ff; border-color:rgba(108,92,231,0.16); color:#1a1040;
+}
+.app.light-mode .ep-chat-composer input::placeholder { color:rgba(47,32,80,0.28); }
+

@@ -31,12 +31,29 @@ export default function ActivityPage(props: ActivityPageProps) {
         return { color: '#a29bfe', bg: 'rgba(162,155,254,0.14)', label: 'Update' }
       case 'FRIEND':
         return { color: '#ffeaa7', bg: 'rgba(255,234,167,0.14)', label: 'Friends' }
+      case 'REMINDER':
+        return { color: '#ff9f43', bg: 'rgba(255,159,67,0.14)', label: 'Reminder' }
       default:
         return { color: '#b2bec3', bg: 'rgba(178,190,195,0.14)', label: 'Activity' }
     }
   }
 
   function getRowIcon(tone: string, cat: string) {
+    if (cat === 'REMINDER') {
+      return {
+        bg: tone === 'positive'
+          ? 'linear-gradient(135deg,#ff9f43,#ffb142)'
+          : tone === 'negative'
+          ? 'linear-gradient(135deg,#ff6b6b,#ee5253)'
+          : 'linear-gradient(135deg,#ff9f43,#ffb142)',
+        icon: (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+        )
+      }
+    }
     const base = {
       positive: { bg: 'linear-gradient(135deg,#00b894,#00cec9)', icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
@@ -71,7 +88,7 @@ export default function ActivityPage(props: ActivityPageProps) {
 
   const totalActivities = activityStats?.total || 0
   const completedActivities = activityStats?.expenses || 0
-  const unsettled = activityStats?.settlements || 0
+  const unsettled = (activityStats?.settlements || 0) + (activityStats?.reminders || 0)
 
   const filterChips = [
     { key: 'ALL', label: 'All' },
@@ -79,6 +96,7 @@ export default function ActivityPage(props: ActivityPageProps) {
     { key: 'SETTLEMENT', label: 'Settlements' },
     { key: 'GROUP', label: 'Updates' },
     { key: 'FRIEND', label: 'Friends' },
+    { key: 'REMINDER', label: 'Reminders' },
   ]
 
   return (
@@ -691,6 +709,7 @@ export default function ActivityPage(props: ActivityPageProps) {
                   else if (cat === 'EXPENSE') subtitle = 'Expense added'
                   else if (cat === 'GROUP') subtitle = 'Group update'
                   else if (cat === 'FRIEND') subtitle = 'Friend activity'
+                  else if (cat === 'REMINDER') subtitle = 'Settlement reminder'
 
                   return (
                     <div key={activity.id} className="av2-row">

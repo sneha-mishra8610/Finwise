@@ -64,7 +64,9 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+        
         if (userOpt.isEmpty()) {
+            System.out.println("User not found");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         User user = userOpt.get();

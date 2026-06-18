@@ -4,14 +4,21 @@ import java.time.Instant;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.format.annotation.DateTimeFormat;
 
 
 @Document(collection="notifications")
 public class Notification {
     public static enum Type{
         OWE,
-        OWED
+        OWED,
+        FRIEND_ADDED,
+        GROUP_CREATED,
+        EXPENSE_ADDED,
+        EXPENSE_UPDATED,
+        EXPENSE_DELETED,
+        EXPENSE_SETTLED,
+        EXPENSE_OWED,
+        SETTLEMENT_REMINDER
     }
 
     @Id
@@ -24,13 +31,28 @@ public class Notification {
     private Instant lastSent;
     private Instant createdAt;
 
-    public Notification(String userId,String expenseId,Type type,String message,Instant now){
+    /**
+     * Links this notification back to the Activity row that generated it.
+     * When a notification is marked read, the parent Activity.isRead is also
+     * set to true so both collections stay in sync.
+     */
+    private String activityId;
+
+    public Notification(String userId, String expenseId, Type type, String message, Instant now){
         this.userId=userId;
         this.expenseId=expenseId;
         this.type=type;
         this.message=message;
         this.lastSent=now;
         this.createdAt=now;
+    }
+
+    public String getActivityId() {
+        return activityId;
+    }
+
+    public void setActivityId(String activityId) {
+        this.activityId = activityId;
     }
 
     public Instant getLastSent() {

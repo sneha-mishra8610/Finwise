@@ -167,24 +167,71 @@ export default function ExpensesPage(props: ExpensesPageProps) {
           {exp.groupId && (
             <div className="ep-dialog-section">
               <div className="ep-dialog-section-title">Expense chat</div>
-              <div className="ep-chat-messages">
-                {(expenseChats[exp.id] || []).length === 0
-                  ? <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>No messages yet.</div>
-                  : (expenseChats[exp.id] || []).map((msg: any, idx: number) => (
-                    <div key={idx} className="ep-chat-msg">
-                      <span className={msg.user === currentUserName ? 'ep-chat-user ep-chat-user-self' : 'ep-chat-user'}>{msg.user}</span>
-                      <span className="ep-chat-text">{msg.message}</span>
-                      <span className="ep-chat-time">{msg.timestamp}</span>
+
+              <div className="ep-chat-panel">
+                <div className="ep-chat-messages">
+                  {(expenseChats[exp.id] || []).length === 0 ? (
+                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', textAlign: 'center', padding: '1rem 0' }}>
+                      No messages yet. Start the conversation!
                     </div>
-                  ))}
-              </div>
-              <div className="ep-chat-composer">
-                <input type="text" placeholder="Type a message…"
-                  value={expenseChatInputs[exp.id] || ''}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseChatInputs((p: any) => ({ ...p, [exp.id]: e.target.value }))}
-                  onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter') { handleSendExpenseChatMessage(exp.id); } }}
-                />
-                <button onClick={() => handleSendExpenseChatMessage(exp.id)} disabled={!(expenseChatInputs[exp.id]?.trim())}>Send</button>
+                  ) : (
+                    (expenseChats[exp.id] || []).map((msg: any, idx: number) => {
+                      const isSelf = msg.user === currentUserName
+                      const initials = msg.user.split(' ').filter(Boolean).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join('')
+                      const avatarColors = ['#6c5ce7','#0984e3','#00b894','#d63031','#e17055','#fdcb6e','#a29bfe','#fd79a8']
+                      const colorIdx = msg.user.split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), 0) % avatarColors.length
+
+                      return (
+                        <div key={idx} className={isSelf ? 'ep-chat-row ep-chat-row-self' : 'ep-chat-row ep-chat-row-other'}>
+                          {!isSelf && (
+                            <div className="ep-chat-avatar" style={{ background: avatarColors[colorIdx] }}>
+                              {initials}
+                            </div>
+                          )}
+                          <div className="ep-chat-bwrap">
+                            {!isSelf && <div className="ep-chat-sender">{msg.user}</div>}
+                            <div className={isSelf ? 'ep-chat-bubble ep-chat-bubble-self' : 'ep-chat-bubble ep-chat-bubble-other'}>
+                              <span className="ep-chat-text">{msg.message}</span>
+                              <div className="ep-chat-meta">
+                                <span className="ep-chat-time">
+                                  {(() => {
+                                    try { return new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+                                    catch { return msg.timestamp }
+                                  })()}
+                                </span>
+                                {isSelf && (
+                                  <svg className="ep-chat-tick" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M20 6L9 17l-5-5"/>
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+
+                <div className="ep-chat-composer">
+                  <input
+                    type="text"
+                    placeholder="Type a message…"
+                    value={expenseChatInputs[exp.id] || ''}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setExpenseChatInputs((p: any) => ({ ...p, [exp.id]: e.target.value }))
+                    }
+                    onKeyDown={(e: React.KeyboardEvent) => {
+                      if (e.key === 'Enter') handleSendExpenseChatMessage(exp.id)
+                    }}
+                  />
+                  <button
+                    onClick={() => handleSendExpenseChatMessage(exp.id)}
+                    disabled={!(expenseChatInputs[exp.id]?.trim())}
+                  >
+                    Send
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -422,7 +469,6 @@ export default function ExpensesPage(props: ExpensesPageProps) {
       {/* Hero */}
       <div className="ep-hero">
         <div>
-          <p className="ep-eyebrow">Finwise / Expenses</p>
           <h2 className="ep-hero-title">Expenses</h2>
           <p className="ep-hero-sub">
             {new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(new Date())}

@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export type DashboardPageProps = Record<string, any>
 
 export default function DashboardPage(props: DashboardPageProps) {
+  const navigate = useNavigate()
   const {
     currentUser,
     greeting,
@@ -960,7 +962,7 @@ export default function DashboardPage(props: DashboardPageProps) {
             <div className="dv2-bottom-card">
               <div className="dv2-bottom-head">
                 <h4 className="dv2-bottom-title">Friend balances</h4>
-                <button className="dv2-view-all">View all</button>
+                <button className="dv2-view-all" onClick={() => navigate('/friends')}>View all</button>
               </div>
               {dashboardFriendBalances.length === 0 ? (
                 <div className="dv2-empty-state">
@@ -992,7 +994,7 @@ export default function DashboardPage(props: DashboardPageProps) {
             <div className="dv2-bottom-card">
               <div className="dv2-bottom-head">
                 <h4 className="dv2-bottom-title">Action required</h4>
-                <button className="dv2-view-all">View all</button>
+                <button className="dv2-view-all" onClick={() => navigate('/expenses')}>View all</button>
               </div>
               {dashboardActionFriends.length === 0 ? (
                 <div className="dv2-empty-state">
@@ -1028,7 +1030,7 @@ export default function DashboardPage(props: DashboardPageProps) {
             <div className="dv2-bottom-card">
               <div className="dv2-bottom-head">
                 <h4 className="dv2-bottom-title">Recent activity</h4>
-                <button className="dv2-view-all">View all</button>
+                <button className="dv2-view-all" onClick={() => navigate('/activity')}>View all</button>
               </div>
               {recentDashboardActivities.length === 0 ? (
                 <div className="dv2-empty-state">

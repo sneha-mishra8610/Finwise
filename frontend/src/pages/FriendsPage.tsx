@@ -1,3 +1,4 @@
+import { useParams, useNavigate } from 'react-router-dom'
 export type FriendsPageProps = Record<string, any>
 
 // Consistent avatar colors per initials
@@ -15,6 +16,8 @@ function initials(name: string) {
 }
 
 export default function FriendsPage(props: FriendsPageProps) {
+  const navigate = useNavigate()
+  const { friendId: routeFriendId } = useParams()
   const {
     currentFriends,
     friendInvitations,
@@ -45,7 +48,6 @@ export default function FriendsPage(props: FriendsPageProps) {
     startEditFriend,
     handleRemoveFriend,
     handleRemindFriend,
-    setFriendDetailView,
     setExpenseDetailView,
     expenseWorkspacePool,
     isExpenseUnsettledForCurrentUser,
@@ -56,10 +58,12 @@ export default function FriendsPage(props: FriendsPageProps) {
     setIsGroupExpense,
     setSelectedFriendId,
     setShowExpenseModal,
-    friendDetailView,
+    friendDetailView: propsFriendDetailView,
     getCurrencySymbol,
     setEditingFriend,
   } = props
+
+  const friendDetailView = routeFriendId || propsFriendDetailView
 
   const sym = getCurrencySymbol(defaultCurrency)
   const fmt = (n: number) => `${sym}${convertINR(Math.abs(n), defaultCurrency).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -81,7 +85,7 @@ export default function FriendsPage(props: FriendsPageProps) {
       breadcrumb: 'Finwise / Friends / Workspace',
       expenses: friendPairExpenses,
       participants: [currentUser, friend].filter(Boolean),
-      onBack: () => { setFriendDetailView(null); setExpenseDetailView(null) },
+      onBack: () => { navigate('/friends'); setExpenseDetailView(null) },
       onAddExpense: () => {
         resetExpenseForm(); setEditingExpense(null)
         setIsFriendExpense(true); setIsGroupExpense(false)
@@ -360,7 +364,7 @@ export default function FriendsPage(props: FriendsPageProps) {
 
                 return (
                   <div key={friend.id} className="fp-table-row"
-                    onClick={() => { setFriendDetailView(friend.id); setExpenseDetailView(null) }}>
+                    onClick={() => { navigate(`/friends/${friend.id}`); setExpenseDetailView(null) }}>
                     {/* Friend identity */}
                     <div className="fp-td fp-td-friend">
                       <div className="fp-avatar fp-avatar-lg" style={{ background: col }}>
@@ -393,7 +397,7 @@ export default function FriendsPage(props: FriendsPageProps) {
                     {/* Actions */}
                     <div className="fp-td fp-td-actions" onClick={(e: any) => e.stopPropagation()}>
                       <button type="button" className="fp-view-btn"
-                        onClick={() => { setFriendDetailView(friend.id); setExpenseDetailView(null) }}>
+                        onClick={() => { navigate(`/friends/${friend.id}`); setExpenseDetailView(null) }}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
                           strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
                           <rect x="2" y="3" width="20" height="14" rx="2"/>

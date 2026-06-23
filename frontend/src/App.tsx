@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import './App.css'
 import React, { useEffect, useState, useCallback } from 'react'
+import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
 import ActivityPage from './pages/ActivityPage'
@@ -267,6 +268,40 @@ function getSidebarIcon(tab: AppTab) {
 }
 
 function App() {
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const activeTab = (() => {
+    const seg = location.pathname.split('/')[1] || 'home'
+    const map: Record<string, AppTab> = {
+      home: 'Home',
+      groups: 'Groups',
+      expenses: 'Expenses',
+      friends: 'Friends',
+      activity: 'Activity',
+      budget: 'Budget',
+      export: 'Export',
+      account: 'Account'
+    }
+    return map[seg] || 'Home'
+  })()
+
+  const groupDetailView = location.pathname.startsWith('/groups/')
+    ? location.pathname.split('/')[2] || null
+    : null
+
+  const friendDetailView = location.pathname.startsWith('/friends/')
+    ? location.pathname.split('/')[2] || null
+    : null
+
+  const setGroupDetailView = useCallback((id: string | null) => {
+    id ? navigate(`/groups/${id}`) : navigate('/groups')
+  }, [navigate])
+
+  const setFriendDetailView = useCallback((id: string | null) => {
+    id ? navigate(`/friends/${id}`) : navigate('/friends')
+  }, [navigate])
+
   const [editLogDisplayCount, setEditLogDisplayCount] = useState(3)
   const [currentUserId, setCurrentUserId] = useState<string>(() => localStorage.getItem('currentUserId') || '')
   const [selectedGroupId, setSelectedGroupId] = useState<string>('')
@@ -406,7 +441,7 @@ function App() {
   const [activityPage, setActivityPage] = useState(0)
   const [activityHasMore, setActivityHasMore] = useState(true)
   const [activityFilterLoading, setActivityFilterLoading] = useState(false)
-  const [expenseDetailView, setExpenseDetailView] = useState<Expense | null>(null)
+  const [expenseDetailView, setExpenseDetailViewState] = useState<Expense | null>(null)
   const [friendBalances, setFriendBalances] = useState<{ [friendId: string]: number }>({})
 
   const [friendNameToAdd, setFriendNameToAdd] = useState('')
@@ -437,9 +472,6 @@ function App() {
   const [expenseEditLogs, setExpenseEditLogs] = useState<{ [expenseId: string]: ExpenseEditLog[] }>({})
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [expenseViewFilter, setExpenseViewFilter] = useState<'ALL' | 'PERSONAL' | 'GROUP' | 'UNSETTLED' | 'RECURRING' | 'FLAGGED'>('ALL')
-  const [activeTab, setActiveTab] = useState<AppTab>('Home')
-  const [groupDetailView, setGroupDetailView] = useState<string | null>(null)
-  const [friendDetailView, setFriendDetailView] = useState<string | null>(null)
   const [showQuickGroupChat, setShowQuickGroupChat] = useState(false)
   const [quickChatGroupId, setQuickChatGroupId] = useState('')
   const [groupSearch, setGroupSearch] = useState('')
@@ -658,9 +690,7 @@ function App() {
     return () => { cancelled = true }
   }, [activityFilter, authToken, currentUserId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (selectedGroupId) fetchGroupExpenses(selectedGroupId)
-  }, [selectedGroupId]) // eslint-disable-line react-hooks/exhaustive-deps
+
 
   useEffect(() => {
     if (expenseDetailView) fetchExpenseEditLogs(expenseDetailView.id)
@@ -902,6 +932,16 @@ function App() {
       if (res.ok) setGroupExpenses(await res.json())
     } catch { /* ignore */ }
   }, [authedFetch])
+
+  useEffect(() => {
+    if (groupDetailView) {
+      setSelectedGroupId(groupDetailView)
+    }
+  }, [groupDetailView])
+
+  useEffect(() => {
+    if (selectedGroupId) fetchGroupExpenses(selectedGroupId)
+  }, [selectedGroupId, fetchGroupExpenses])
 
   const fetchPersonalExpenses = React.useCallback(async (userId: string) => {
     try {
@@ -1478,6 +1518,27 @@ function App() {
   const expenseWorkspacePool: Expense[] = [...personalExpenses, ...allGroupExpenses]
     .filter((e, i, arr) => arr.findIndex(x => x.id === e.id) === i)
     .sort((a, b) => (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0))
+
+  const setExpenseDetailView = useCallback((val: Expense | null) => {
+    if (val) {
+      navigate(`/expenses/${val.id}`)
+    } else {
+      navigate('/expenses')
+    }
+  }, [navigate])
+
+  useEffect(() => {
+    const match = location.pathname.match(/^\/expenses\/([^/]+)/)
+    if (match) {
+      const id = match[1]
+      const found = expenseWorkspacePool.find(e => e.id === id)
+      if (found) {
+        setExpenseDetailViewState(found)
+      }
+    } else {
+      setExpenseDetailViewState(null)
+    }
+  }, [location.pathname, expenseWorkspacePool])
 
   const recurringTemplates = expenseWorkspacePool.filter(e => e.isRecurring || e.recurring)
   const flaggedExpenses = expenseWorkspacePool.filter(e => (e.flaggedBy?.length || 0) > 0)
@@ -2095,7 +2156,7 @@ function App() {
             <nav className="sidebar-tabs">
               {(['Home', 'Groups', 'Expenses', 'Friends', 'Activity', 'Budget', 'Export', 'Account'] as const).map(tab => (
                 <button key={tab} className={activeTab === tab ? 'sidebar-tab sidebar-tab-active' : 'sidebar-tab'}
-                  onClick={() => { setActiveTab(tab); setGroupDetailView(null); setFriendDetailView(null); setExpenseDetailView(null) }}>
+                  onClick={() => { setExpenseDetailView(null); navigate(`/${tab.toLowerCase()}`) }}>
                   <span className="sidebar-tab-icon" aria-hidden="true">{getSidebarIcon(tab)}</span>
                   <span>{tab}</span>
                 </button>
@@ -2112,337 +2173,519 @@ function App() {
         </aside>
 
         <main className="main">
-          {activeTab === 'Home' && currentUser && (
-            <DashboardPage
-              currentUser={currentUser}
-              greeting={greeting}
-              dashboardDateLabel={dashboardDateLabel}
-              dashboardPeriod={dashboardPeriod}
-              setDashboardPeriod={setDashboardPeriod}
-              dashboardPeriodMeta={dashboardPeriodMeta}
-              dashboardLoading={dashboardLoading}
-              dashboardError={dashboardError}
-              dashboardSummary={dashboardSummary}
-              defaultCurrency={defaultCurrency}
-              convertINR={convertINR}
-              dashboardActionFriends={dashboardActionFriends}
-              dashboardFriendBalances={dashboardFriendBalances}
-              dashboardAnalytics={dashboardAnalytics}
-              dashboardBudgetAmount={dashboardBudgetAmount}
-              dashboardBudgetProgress={dashboardBudgetProgress}
-              dashboardBudgetRemaining={dashboardBudgetRemaining}
-              dashboardMixMode={dashboardMixMode}
-              setDashboardMixMode={setDashboardMixMode}
-              expenseMix={expenseMix}
-              dashboardCategoryMix={dashboardCategoryMix}
-              recentDashboardActivities={recentDashboardActivities}
-              getCurrencySymbol={getCurrencySymbol}
-              getCategoryColor={getCategoryColor}
-              authedFetch={authedFetch}
-              API_BASE={API_BASE}
-              currentUserId={currentUserId}
-              fetchFriendBalances={fetchFriendBalances}
-              fetchDashboardSummary={fetchDashboardSummary}
-              fetchActivities={fetchActivities}
-            />
-          )}
+          <Routes>
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/home" element={currentUser ? (
+              <DashboardPage
+                currentUser={currentUser}
+                greeting={greeting}
+                dashboardDateLabel={dashboardDateLabel}
+                dashboardPeriod={dashboardPeriod}
+                setDashboardPeriod={setDashboardPeriod}
+                dashboardPeriodMeta={dashboardPeriodMeta}
+                dashboardLoading={dashboardLoading}
+                dashboardError={dashboardError}
+                dashboardSummary={dashboardSummary}
+                defaultCurrency={defaultCurrency}
+                convertINR={convertINR}
+                dashboardActionFriends={dashboardActionFriends}
+                dashboardFriendBalances={dashboardFriendBalances}
+                dashboardAnalytics={dashboardAnalytics}
+                dashboardBudgetAmount={dashboardBudgetAmount}
+                dashboardBudgetProgress={dashboardBudgetProgress}
+                dashboardBudgetRemaining={dashboardBudgetRemaining}
+                dashboardMixMode={dashboardMixMode}
+                setDashboardMixMode={setDashboardMixMode}
+                expenseMix={expenseMix}
+                dashboardCategoryMix={dashboardCategoryMix}
+                recentDashboardActivities={recentDashboardActivities}
+                getCurrencySymbol={getCurrencySymbol}
+                getCategoryColor={getCategoryColor}
+                authedFetch={authedFetch}
+                API_BASE={API_BASE}
+                currentUserId={currentUserId}
+                fetchFriendBalances={fetchFriendBalances}
+                fetchDashboardSummary={fetchDashboardSummary}
+                fetchActivities={fetchActivities}
+              />
+            ) : null} />
 
-          {activeTab === 'Friends' && (
-            <FriendsPage
-              currentFriends={currentFriends}
-              friendInvitations={friendInvitations}
-              pendingInvitations={pendingInvitations}
-              friendBalances={friendBalances}
-              users={users}
-              currentUser={currentUser}
-              currentUserId={currentUserId}
-              defaultCurrency={defaultCurrency}
-              convertINR={convertINR}
-              getCurrencySymbol={getCurrencySymbol}
-              friendSearch={friendSearch}
-              setFriendSearch={setFriendSearch}
-              friendAddError={friendAddError}
-              friendAddSuccess={friendAddSuccess}
-              friendNameToAdd={friendNameToAdd}
-              setFriendNameToAdd={setFriendNameToAdd}
-              friendEmailToAdd={friendEmailToAdd}
-              setFriendEmailToAdd={setFriendEmailToAdd}
-              editingFriend={editingFriend}
-              editFriendName={editFriendName}
-              setEditFriendName={setEditFriendName}
-              editFriendEmail={editFriendEmail}
-              setEditFriendEmail={setEditFriendEmail}
-              handleAddFriend={handleAddFriend}
-              handleAcceptFriendInvitation={handleAcceptFriendInvitation}
-              handleDeclineFriendInvitation={handleDeclineFriendInvitation}
-              handleUpdateFriend={handleUpdateFriend}
-              startEditFriend={startEditFriend}
-              handleRemoveFriend={handleRemoveFriend}
-              handleRemindFriend={handleRemindFriend}
-              setFriendDetailView={setFriendDetailView}
-              setExpenseDetailView={setExpenseDetailView}
-              expenseWorkspacePool={expenseWorkspacePool}
-              isExpenseUnsettledForCurrentUser={isExpenseUnsettledForCurrentUser}
-              renderWorkspaceDashboard={renderWorkspaceDashboard}
-              resetExpenseForm={resetExpenseForm}
-              setEditingExpense={setEditingExpense}
-              setIsFriendExpense={setIsFriendExpense}
-              setIsGroupExpense={setIsGroupExpense}
-              setSelectedFriendId={setSelectedFriendId}
-              setShowExpenseModal={setShowExpenseModal}
-              friendDetailView={friendDetailView}
-              setEditingFriend={setEditingFriend}
-            />
-          )}
+            <Route path="/friends" element={
+              <FriendsPage
+                currentFriends={currentFriends}
+                friendInvitations={friendInvitations}
+                pendingInvitations={pendingInvitations}
+                friendBalances={friendBalances}
+                users={users}
+                currentUser={currentUser}
+                currentUserId={currentUserId}
+                defaultCurrency={defaultCurrency}
+                convertINR={convertINR}
+                getCurrencySymbol={getCurrencySymbol}
+                friendSearch={friendSearch}
+                setFriendSearch={setFriendSearch}
+                friendAddError={friendAddError}
+                friendAddSuccess={friendAddSuccess}
+                friendNameToAdd={friendNameToAdd}
+                setFriendNameToAdd={setFriendNameToAdd}
+                friendEmailToAdd={friendEmailToAdd}
+                setFriendEmailToAdd={setFriendEmailToAdd}
+                editingFriend={editingFriend}
+                editFriendName={editFriendName}
+                setEditFriendName={setEditFriendName}
+                editFriendEmail={editFriendEmail}
+                setEditFriendEmail={setEditFriendEmail}
+                handleAddFriend={handleAddFriend}
+                handleAcceptFriendInvitation={handleAcceptFriendInvitation}
+                handleDeclineFriendInvitation={handleDeclineFriendInvitation}
+                handleUpdateFriend={handleUpdateFriend}
+                startEditFriend={startEditFriend}
+                handleRemoveFriend={handleRemoveFriend}
+                handleRemindFriend={handleRemindFriend}
+                setFriendDetailView={setFriendDetailView}
+                setExpenseDetailView={setExpenseDetailView}
+                expenseWorkspacePool={expenseWorkspacePool}
+                isExpenseUnsettledForCurrentUser={isExpenseUnsettledForCurrentUser}
+                renderWorkspaceDashboard={renderWorkspaceDashboard}
+                resetExpenseForm={resetExpenseForm}
+                setEditingExpense={setEditingExpense}
+                setIsFriendExpense={setIsFriendExpense}
+                setIsGroupExpense={setIsGroupExpense}
+                setSelectedFriendId={setSelectedFriendId}
+                setShowExpenseModal={setShowExpenseModal}
+                friendDetailView={friendDetailView}
+                setEditingFriend={setEditingFriend}
+              />
+            } />
+            <Route path="/friends/:friendId" element={
+              <FriendsPage
+                currentFriends={currentFriends}
+                friendInvitations={friendInvitations}
+                pendingInvitations={pendingInvitations}
+                friendBalances={friendBalances}
+                users={users}
+                currentUser={currentUser}
+                currentUserId={currentUserId}
+                defaultCurrency={defaultCurrency}
+                convertINR={convertINR}
+                getCurrencySymbol={getCurrencySymbol}
+                friendSearch={friendSearch}
+                setFriendSearch={setFriendSearch}
+                friendAddError={friendAddError}
+                friendAddSuccess={friendAddSuccess}
+                friendNameToAdd={friendNameToAdd}
+                setFriendNameToAdd={setFriendNameToAdd}
+                friendEmailToAdd={friendEmailToAdd}
+                setFriendEmailToAdd={setFriendEmailToAdd}
+                editingFriend={editingFriend}
+                editFriendName={editFriendName}
+                setEditFriendName={setEditFriendName}
+                editFriendEmail={editFriendEmail}
+                setEditFriendEmail={setEditFriendEmail}
+                handleAddFriend={handleAddFriend}
+                handleAcceptFriendInvitation={handleAcceptFriendInvitation}
+                handleDeclineFriendInvitation={handleDeclineFriendInvitation}
+                handleUpdateFriend={handleUpdateFriend}
+                startEditFriend={startEditFriend}
+                handleRemoveFriend={handleRemoveFriend}
+                handleRemindFriend={handleRemindFriend}
+                setFriendDetailView={setFriendDetailView}
+                setExpenseDetailView={setExpenseDetailView}
+                expenseWorkspacePool={expenseWorkspacePool}
+                isExpenseUnsettledForCurrentUser={isExpenseUnsettledForCurrentUser}
+                renderWorkspaceDashboard={renderWorkspaceDashboard}
+                resetExpenseForm={resetExpenseForm}
+                setEditingExpense={setEditingExpense}
+                setIsFriendExpense={setIsFriendExpense}
+                setIsGroupExpense={setIsGroupExpense}
+                setSelectedFriendId={setSelectedFriendId}
+                setShowExpenseModal={setShowExpenseModal}
+                friendDetailView={friendDetailView}
+                setEditingFriend={setEditingFriend}
+              />
+            } />
 
-          {activeTab === 'Groups' && (
-            <GroupsPage
-              sortedGroups={sortedGroups}
-              groupOverview={groupOverview}
-              showCreateGroupPanel={showCreateGroupPanel}
-              setShowCreateGroupPanel={setShowCreateGroupPanel}
-              groupName={groupName}
-              setGroupName={setGroupName}
-              currentFriends={currentFriends}
-              groupMemberIds={groupMemberIds}
-              toggleGroupMember={toggleGroupMember}
-              handleCreateGroup={handleCreateGroup}
-              editingGroup={editingGroup}
-              editGroupName={editGroupName}
-              setEditGroupName={setEditGroupName}
-              editGroupMemberIds={editGroupMemberIds}
-              handleUpdateGroup={handleUpdateGroup}
-              toggleEditGroupMember={toggleEditGroupMember}
-              startEditGroup={startEditGroup}
-              handleDeleteGroup={handleDeleteGroup}
-              groupInvitations={groupInvitations}
-              handleAcceptGroupInvitation={handleAcceptGroupInvitation}
-              handleDeclineGroupInvitation={handleDeclineGroupInvitation}
-              users={users}
-              setGroupDetailView={setGroupDetailView}
-              setExpenseDetailView={setExpenseDetailView}
-              renderWorkspaceDashboard={renderWorkspaceDashboard}
-              resetExpenseForm={resetExpenseForm}
-              setEditingExpense={setEditingExpense}
-              setIsGroupExpense={setIsGroupExpense}
-              setIsFriendExpense={setIsFriendExpense}
-              setSelectedGroupId={setSelectedGroupId}
-              setShowExpenseModal={setShowExpenseModal}
-              groupDetailView={groupDetailView}
-              groups={groups}
-              defaultCurrency={defaultCurrency}
-              convertINR={convertINR}
-              getCurrencySymbol={getCurrencySymbol}
-              setEditingGroup={setEditingGroup}
-              setEditGroupMemberIds={setEditGroupMemberIds}
-              groupExpenses={groupExpenses}
-              fetchGroupExpenses={fetchGroupExpenses}
-            />
-          )}
+            <Route path="/groups" element={
+              <GroupsPage
+                sortedGroups={sortedGroups}
+                groupOverview={groupOverview}
+                showCreateGroupPanel={showCreateGroupPanel}
+                setShowCreateGroupPanel={setShowCreateGroupPanel}
+                groupName={groupName}
+                setGroupName={setGroupName}
+                currentFriends={currentFriends}
+                groupMemberIds={groupMemberIds}
+                toggleGroupMember={toggleGroupMember}
+                handleCreateGroup={handleCreateGroup}
+                editingGroup={editingGroup}
+                editGroupName={editGroupName}
+                setEditGroupName={setEditGroupName}
+                editGroupMemberIds={editGroupMemberIds}
+                handleUpdateGroup={handleUpdateGroup}
+                toggleEditGroupMember={toggleEditGroupMember}
+                startEditGroup={startEditGroup}
+                handleDeleteGroup={handleDeleteGroup}
+                groupInvitations={groupInvitations}
+                handleAcceptGroupInvitation={handleAcceptGroupInvitation}
+                handleDeclineGroupInvitation={handleDeclineGroupInvitation}
+                users={users}
+                setGroupDetailView={setGroupDetailView}
+                setExpenseDetailView={setExpenseDetailView}
+                renderWorkspaceDashboard={renderWorkspaceDashboard}
+                resetExpenseForm={resetExpenseForm}
+                setEditingExpense={setEditingExpense}
+                setIsGroupExpense={setIsGroupExpense}
+                setIsFriendExpense={setIsFriendExpense}
+                setSelectedGroupId={setSelectedGroupId}
+                setShowExpenseModal={setShowExpenseModal}
+                groupDetailView={groupDetailView}
+                groups={groups}
+                defaultCurrency={defaultCurrency}
+                convertINR={convertINR}
+                getCurrencySymbol={getCurrencySymbol}
+                setEditingGroup={setEditingGroup}
+                setEditGroupMemberIds={setEditGroupMemberIds}
+                groupExpenses={groupExpenses}
+                fetchGroupExpenses={fetchGroupExpenses}
+              />
+            } />
+            <Route path="/groups/:groupId" element={
+              <GroupsPage
+                sortedGroups={sortedGroups}
+                groupOverview={groupOverview}
+                showCreateGroupPanel={showCreateGroupPanel}
+                setShowCreateGroupPanel={setShowCreateGroupPanel}
+                groupName={groupName}
+                setGroupName={setGroupName}
+                currentFriends={currentFriends}
+                groupMemberIds={groupMemberIds}
+                toggleGroupMember={toggleGroupMember}
+                handleCreateGroup={handleCreateGroup}
+                editingGroup={editingGroup}
+                editGroupName={editGroupName}
+                setEditGroupName={setEditGroupName}
+                editGroupMemberIds={editGroupMemberIds}
+                handleUpdateGroup={handleUpdateGroup}
+                toggleEditGroupMember={toggleEditGroupMember}
+                startEditGroup={startEditGroup}
+                handleDeleteGroup={handleDeleteGroup}
+                groupInvitations={groupInvitations}
+                handleAcceptGroupInvitation={handleAcceptGroupInvitation}
+                handleDeclineGroupInvitation={handleDeclineGroupInvitation}
+                users={users}
+                setGroupDetailView={setGroupDetailView}
+                setExpenseDetailView={setExpenseDetailView}
+                renderWorkspaceDashboard={renderWorkspaceDashboard}
+                resetExpenseForm={resetExpenseForm}
+                setEditingExpense={setEditingExpense}
+                setIsGroupExpense={setIsGroupExpense}
+                setIsFriendExpense={setIsFriendExpense}
+                setSelectedGroupId={setSelectedGroupId}
+                setShowExpenseModal={setShowExpenseModal}
+                groupDetailView={groupDetailView}
+                groups={groups}
+                defaultCurrency={defaultCurrency}
+                convertINR={convertINR}
+                getCurrencySymbol={getCurrencySymbol}
+                setEditingGroup={setEditingGroup}
+                setEditGroupMemberIds={setEditGroupMemberIds}
+                groupExpenses={groupExpenses}
+                fetchGroupExpenses={fetchGroupExpenses}
+              />
+            } />
 
-          {activeTab === 'Expenses' && (
-            <ExpensesPage
-              expenseStats={expenseStats}
-              expensePageTitle={expensePageTitle}
-              expenseFilterTabs={expenseFilterTabs}
-              expenseViewFilter={expenseViewFilter}
-              setExpenseViewFilter={setExpenseViewFilter}
-              filteredExpenseFeed={filteredExpenseFeed}
-              expensesPage={expensesPage}
-              EXPENSES_PAGE_SIZE={EXPENSES_PAGE_SIZE}
-              expenseDetailView={expenseDetailView}
-              expenseChats={expenseChats}
-              expenseChatInputs={expenseChatInputs}
-              setExpenseChatInputs={setExpenseChatInputs}
-              editLogDisplayCount={editLogDisplayCount}
-              setEditLogDisplayCount={setEditLogDisplayCount}
-              currentUserId={currentUserId}
-              currentUserName={currentUserName}
-              users={users}
-              groups={groups}
-              defaultCurrency={defaultCurrency}
-              convertINR={convertINR}
-              getCurrencySymbol={getCurrencySymbol}
-              setExpenseDetailView={setExpenseDetailView}
-              setExpensesPage={setExpensesPage}
-              handleSettleUp={handleSettleUp}
-              startEditExpense={startEditExpense}
-              setShowExpenseModal={setShowExpenseModal}
-              handleDeleteExpense={handleDeleteExpense}
-              handleFlagExpense={handleFlagExpense}
-              handleUnflagExpense={handleUnflagExpense}
-              handleSendExpenseChatMessage={handleSendExpenseChatMessage}
-              shareLabel={shareLabel}
-              userShare={userShare}
-              othersOweTotal={othersOweTotal}
-              getExpenseCategory={getExpenseCategory}
-              payerName={payerName}
-              resetExpenseForm={resetExpenseForm}
-              setEditingExpense={setEditingExpense}
-              expenseDescription={expenseDescription}
-              expenseTag={expenseTag}
-              setExpenseDescription={setExpenseDescription}
-              setExpenseTag={setExpenseTag}
-              expenseAmount={expenseAmount}
-              setExpenseAmount={setExpenseAmount}
-              expenseCurrency={expenseCurrency}
-              setExpenseCurrency={setExpenseCurrency}
-              isRecurringExpense={isRecurringExpense}
-              setIsRecurringExpense={setIsRecurringExpense}
-              recurrenceStartDate={recurrenceStartDate}
-              setRecurrenceStartDate={setRecurrenceStartDate}
-              recurrenceType={recurrenceType}
-              setRecurrenceType={setRecurrenceType}
-              recurrenceInterval={recurrenceInterval}
-              setRecurrenceInterval={setRecurrenceInterval}
-              recurrenceEndDate={recurrenceEndDate}
-              setRecurrenceEndDate={setRecurrenceEndDate}
-              isGroupExpense={isGroupExpense}
-              setIsGroupExpense={setIsGroupExpense}
-              isFriendExpense={isFriendExpense}
-              setIsFriendExpense={setIsFriendExpense}
-              selectedFriendId={selectedFriendId}
-              setSelectedFriendId={setSelectedFriendId}
-              expensePayerId={expensePayerId}
-              setExpensePayerId={setExpensePayerId}
-              selectedGroupId={selectedGroupId}
-              setSelectedGroupId={setSelectedGroupId}
-              splitMode={splitMode}
-              setSplitMode={setSplitMode}
-              customSplits={customSplits}
-              setCustomSplits={setCustomSplits}
-              currentFriends={currentFriends}
-              filteredGroups={filteredGroups}
-              editingExpense={editingExpense}
-              expenseEditLogs={expenseEditLogs}
-              showExpenseModal={showExpenseModal}
-              setShowExpenseModalState={setShowExpenseModal}
-              handleSaveExpense={handleSaveExpense}
-              remainingAmount={remainingAmount}
-              remainingPercentage={remainingPercentage}
-              expenseImageUrl={expenseImageUrl}
-              setExpenseImageUrl={setExpenseImageUrl}
-              currentUser={currentUser}
-            />
-          )}
+            <Route path="/expenses" element={
+              <ExpensesPage
+                expenseStats={expenseStats}
+                expensePageTitle={expensePageTitle}
+                expenseFilterTabs={expenseFilterTabs}
+                expenseViewFilter={expenseViewFilter}
+                setExpenseViewFilter={setExpenseViewFilter}
+                filteredExpenseFeed={filteredExpenseFeed}
+                expensesPage={expensesPage}
+                EXPENSES_PAGE_SIZE={EXPENSES_PAGE_SIZE}
+                expenseDetailView={expenseDetailView}
+                expenseChats={expenseChats}
+                expenseChatInputs={expenseChatInputs}
+                setExpenseChatInputs={setExpenseChatInputs}
+                editLogDisplayCount={editLogDisplayCount}
+                setEditLogDisplayCount={setEditLogDisplayCount}
+                currentUserId={currentUserId}
+                currentUserName={currentUserName}
+                users={users}
+                groups={groups}
+                defaultCurrency={defaultCurrency}
+                convertINR={convertINR}
+                getCurrencySymbol={getCurrencySymbol}
+                setExpenseDetailView={setExpenseDetailView}
+                setExpensesPage={setExpensesPage}
+                handleSettleUp={handleSettleUp}
+                startEditExpense={startEditExpense}
+                setShowExpenseModal={setShowExpenseModal}
+                handleDeleteExpense={handleDeleteExpense}
+                handleFlagExpense={handleFlagExpense}
+                handleUnflagExpense={handleUnflagExpense}
+                handleSendExpenseChatMessage={handleSendExpenseChatMessage}
+                shareLabel={shareLabel}
+                userShare={userShare}
+                othersOweTotal={othersOweTotal}
+                getExpenseCategory={getExpenseCategory}
+                payerName={payerName}
+                resetExpenseForm={resetExpenseForm}
+                setEditingExpense={setEditingExpense}
+                expenseDescription={expenseDescription}
+                expenseTag={expenseTag}
+                setExpenseDescription={setExpenseDescription}
+                setExpenseTag={setExpenseTag}
+                expenseAmount={expenseAmount}
+                setExpenseAmount={setExpenseAmount}
+                expenseCurrency={expenseCurrency}
+                setExpenseCurrency={setExpenseCurrency}
+                isRecurringExpense={isRecurringExpense}
+                setIsRecurringExpense={setIsRecurringExpense}
+                recurrenceStartDate={recurrenceStartDate}
+                setRecurrenceStartDate={setRecurrenceStartDate}
+                recurrenceType={recurrenceType}
+                setRecurrenceType={setRecurrenceType}
+                recurrenceInterval={recurrenceInterval}
+                setRecurrenceInterval={setRecurrenceInterval}
+                recurrenceEndDate={recurrenceEndDate}
+                setRecurrenceEndDate={setRecurrenceEndDate}
+                isGroupExpense={isGroupExpense}
+                setIsGroupExpense={setIsGroupExpense}
+                isFriendExpense={isFriendExpense}
+                setIsFriendExpense={setIsFriendExpense}
+                selectedFriendId={selectedFriendId}
+                setSelectedFriendId={setSelectedFriendId}
+                expensePayerId={expensePayerId}
+                setExpensePayerId={setExpensePayerId}
+                selectedGroupId={selectedGroupId}
+                setSelectedGroupId={setSelectedGroupId}
+                splitMode={splitMode}
+                setSplitMode={setSplitMode}
+                customSplits={customSplits}
+                setCustomSplits={setCustomSplits}
+                currentFriends={currentFriends}
+                filteredGroups={filteredGroups}
+                editingExpense={editingExpense}
+                expenseEditLogs={expenseEditLogs}
+                showExpenseModal={showExpenseModal}
+                setShowExpenseModalState={setShowExpenseModal}
+                handleSaveExpense={handleSaveExpense}
+                remainingAmount={remainingAmount}
+                remainingPercentage={remainingPercentage}
+                expenseImageUrl={expenseImageUrl}
+                setExpenseImageUrl={setExpenseImageUrl}
+                currentUser={currentUser}
+                expenseWorkspacePool={expenseWorkspacePool}
+              />
+            } />
+            <Route path="/expenses/:expenseId" element={
+              <ExpensesPage
+                expenseStats={expenseStats}
+                expensePageTitle={expensePageTitle}
+                expenseFilterTabs={expenseFilterTabs}
+                expenseViewFilter={expenseViewFilter}
+                setExpenseViewFilter={setExpenseViewFilter}
+                filteredExpenseFeed={filteredExpenseFeed}
+                expensesPage={expensesPage}
+                EXPENSES_PAGE_SIZE={EXPENSES_PAGE_SIZE}
+                expenseDetailView={expenseDetailView}
+                expenseChats={expenseChats}
+                expenseChatInputs={expenseChatInputs}
+                setExpenseChatInputs={setExpenseChatInputs}
+                editLogDisplayCount={editLogDisplayCount}
+                setEditLogDisplayCount={setEditLogDisplayCount}
+                currentUserId={currentUserId}
+                currentUserName={currentUserName}
+                users={users}
+                groups={groups}
+                defaultCurrency={defaultCurrency}
+                convertINR={convertINR}
+                getCurrencySymbol={getCurrencySymbol}
+                setExpenseDetailView={setExpenseDetailView}
+                setExpensesPage={setExpensesPage}
+                handleSettleUp={handleSettleUp}
+                startEditExpense={startEditExpense}
+                setShowExpenseModal={setShowExpenseModal}
+                handleDeleteExpense={handleDeleteExpense}
+                handleFlagExpense={handleFlagExpense}
+                handleUnflagExpense={handleUnflagExpense}
+                handleSendExpenseChatMessage={handleSendExpenseChatMessage}
+                shareLabel={shareLabel}
+                userShare={userShare}
+                othersOweTotal={othersOweTotal}
+                getExpenseCategory={getExpenseCategory}
+                payerName={payerName}
+                resetExpenseForm={resetExpenseForm}
+                setEditingExpense={setEditingExpense}
+                expenseDescription={expenseDescription}
+                expenseTag={expenseTag}
+                setExpenseDescription={setExpenseDescription}
+                setExpenseTag={setExpenseTag}
+                expenseAmount={expenseAmount}
+                setExpenseAmount={setExpenseAmount}
+                expenseCurrency={expenseCurrency}
+                setExpenseCurrency={setExpenseCurrency}
+                isRecurringExpense={isRecurringExpense}
+                setIsRecurringExpense={setIsRecurringExpense}
+                recurrenceStartDate={recurrenceStartDate}
+                setRecurrenceStartDate={setRecurrenceStartDate}
+                recurrenceType={recurrenceType}
+                setRecurrenceType={setRecurrenceType}
+                recurrenceInterval={recurrenceInterval}
+                setRecurrenceInterval={setRecurrenceInterval}
+                recurrenceEndDate={recurrenceEndDate}
+                setRecurrenceEndDate={setRecurrenceEndDate}
+                isGroupExpense={isGroupExpense}
+                setIsGroupExpense={setIsGroupExpense}
+                isFriendExpense={isFriendExpense}
+                setIsFriendExpense={setIsFriendExpense}
+                selectedFriendId={selectedFriendId}
+                setSelectedFriendId={setSelectedFriendId}
+                expensePayerId={expensePayerId}
+                setExpensePayerId={setExpensePayerId}
+                selectedGroupId={selectedGroupId}
+                setSelectedGroupId={setSelectedGroupId}
+                splitMode={splitMode}
+                setSplitMode={setSplitMode}
+                customSplits={customSplits}
+                setCustomSplits={setCustomSplits}
+                currentFriends={currentFriends}
+                filteredGroups={filteredGroups}
+                editingExpense={editingExpense}
+                expenseEditLogs={expenseEditLogs}
+                showExpenseModal={showExpenseModal}
+                setShowExpenseModalState={setShowExpenseModal}
+                handleSaveExpense={handleSaveExpense}
+                remainingAmount={remainingAmount}
+                remainingPercentage={remainingPercentage}
+                expenseImageUrl={expenseImageUrl}
+                setExpenseImageUrl={setExpenseImageUrl}
+                currentUser={currentUser}
+                expenseWorkspacePool={expenseWorkspacePool}
+              />
+            } />
 
-          {activeTab === 'Activity' && (
-            <ActivityPage
-              activityStats={activityStats}
-              activityFilterTabs={activityFilterTabs}
-              activityFilter={activityFilter}
-              setActivityFilter={setActivityFilter}
-              activitySortOrder={activitySortOrder}
-              setActivitySortOrder={setActivitySortOrder}
-              activityGroups={activityGroups}
-              activityFilterLoading={activityFilterLoading}
-              activityHasMore={activityHasMore}
-              activityPage={activityPage}
-              setActivityPage={setActivityPage}
-              fetchActivities={fetchActivities}
-              currentUserId={currentUserId}
-              getActivityTone={getActivityTone}
-              getActivityCategory={getActivityCategory}
-              getActivityBadge={getActivityBadge}
-              formatRelativeTime={formatRelativeTime}
-            />
-          )}
+            <Route path="/activity" element={
+              <ActivityPage
+                activityStats={activityStats}
+                activityFilterTabs={activityFilterTabs}
+                activityFilter={activityFilter}
+                setActivityFilter={setActivityFilter}
+                activitySortOrder={activitySortOrder}
+                setActivitySortOrder={setActivitySortOrder}
+                activityGroups={activityGroups}
+                activityFilterLoading={activityFilterLoading}
+                activityHasMore={activityHasMore}
+                activityPage={activityPage}
+                setActivityPage={setActivityPage}
+                fetchActivities={fetchActivities}
+                currentUserId={currentUserId}
+                getActivityTone={getActivityTone}
+                getActivityCategory={getActivityCategory}
+                getActivityBadge={getActivityBadge}
+                formatRelativeTime={formatRelativeTime}
+              />
+            } />
 
-          {activeTab === 'Budget' && currentUser && (
-            <BudgetPage
-              currentUser={currentUser}
-              defaultCurrency={defaultCurrency}
-              convertINR={convertINR}
-              getCurrencySymbol={getCurrencySymbol}
-              selectedBudgetPeriod={selectedBudgetPeriod}
-              setSelectedBudgetPeriod={setSelectedBudgetPeriod}
-              selectedBudgetMeta={selectedBudgetMeta}
-              budgetInput={budgetInput}
-              setBudgetInput={setBudgetInput}
-              budgetSummaryCurrency={budgetSummaryCurrency}
-              setBudgetSummaryCurrency={setBudgetSummaryCurrency}
-              budgetAmount={budgetAmount}
-              budgetRemaining={budgetRemaining}
-              budgetProgress={budgetProgress}
-              spentForSelectedPeriod={spentForSelectedPeriod}
-              handleSaveBudget={handleSaveBudget}
-              budgetSummaries={budgetSummaries}
-              allExpenses={allExpenses}
-              getBudgetPeriodMeta={getBudgetPeriodMeta}
-              getPreviousPeriodDate={getPreviousPeriodDate}
-            />
-          )}
+            <Route path="/budget" element={currentUser ? (
+              <BudgetPage
+                currentUser={currentUser}
+                defaultCurrency={defaultCurrency}
+                convertINR={convertINR}
+                getCurrencySymbol={getCurrencySymbol}
+                selectedBudgetPeriod={selectedBudgetPeriod}
+                setSelectedBudgetPeriod={setSelectedBudgetPeriod}
+                selectedBudgetMeta={selectedBudgetMeta}
+                budgetInput={budgetInput}
+                setBudgetInput={setBudgetInput}
+                budgetSummaryCurrency={budgetSummaryCurrency}
+                setBudgetSummaryCurrency={setBudgetSummaryCurrency}
+                budgetAmount={budgetAmount}
+                budgetRemaining={budgetRemaining}
+                budgetProgress={budgetProgress}
+                spentForSelectedPeriod={spentForSelectedPeriod}
+                handleSaveBudget={handleSaveBudget}
+                budgetSummaries={budgetSummaries}
+                allExpenses={allExpenses}
+                getBudgetPeriodMeta={getBudgetPeriodMeta}
+                getPreviousPeriodDate={getPreviousPeriodDate}
+              />
+            ) : null} />
 
-          {activeTab === 'Export' && (
-            <ExportPage handleExport={handleExport} />
-          )}
+            <Route path="/export" element={
+              <ExportPage handleExport={handleExport} />
+            } />
 
-          {activeTab === 'Account' && currentUser && (
-            <AccountPage
-              currentUser={currentUser}
-              defaultCurrency={defaultCurrency}
-              setDefaultCurrency={setDefaultCurrency}
-              convertINR={convertINR}
-              getCurrencySymbol={getCurrencySymbol}
-              selectedBudgetPeriod={selectedBudgetPeriod}
-              selectedBudgetMeta={selectedBudgetMeta}
-              budgetInput={budgetInput}
-              setBudgetInput={setBudgetInput}
-              setSelectedBudgetPeriod={setSelectedBudgetPeriod}
-              budgetSummaryCurrency={budgetSummaryCurrency}
-              setBudgetSummaryCurrency={setBudgetSummaryCurrency}
-              budgetAmount={budgetAmount}
-              budgetRemaining={budgetRemaining}
-              budgetProgress={budgetProgress}
-              spentForSelectedPeriod={spentForSelectedPeriod}
-              handleSaveBudget={handleSaveBudget}
-              settlementRemindersEnabled={settlementRemindersEnabled}
-              reminderDelayDays={reminderDelayDays}
-              handleToggleSettlementReminders={handleToggleSettlementReminders}
-              handleReminderDelayChange={handleReminderDelayChange}
-              defaultSplitMethod={defaultSplitMethod}
-              setDefaultSplitMethod={setDefaultSplitMethod}
-              accountThemePreference={accountThemePreference}
-              setAccountThemePreference={setAccountThemePreference}
-              setTheme={setTheme}
-              twoFactorEnabled={twoFactorEnabled}
-              setTwoFactorEnabled={setTwoFactorEnabled}
-              openPasswordModal={openPasswordModal}
-              openEditProfileModal={openEditProfileModal}
-              sessionItems={sessionItems}
-              handleExport={handleExport}
-              getInitials={getInitials}
-              handleToggleEmailNotifications={handleToggleEmailNotifications}
-              totalPaid={totalPaid}
-              totalReceived={totalReceived}
-              netSummary={netSummary}
-              settlementRate={settlementRate}
-              avgSettlementDays={avgSettlementDays}
-              memberSince={memberSince}
-              showPasswordModal={showPasswordModal}
-              closePasswordModal={closePasswordModal}
-              currentPassword={currentPassword}
-              setCurrentPassword={setCurrentPassword}
-              newPassword={newPassword}
-              setNewPassword={setNewPassword}
-              confirmNewPassword={confirmNewPassword}
-              setConfirmNewPassword={setConfirmNewPassword}
-              passwordChangeError={passwordChangeError}
-              passwordChangeSuccess={passwordChangeSuccess}
-              passwordChangeLoading={passwordChangeLoading}
-              handleChangePassword={handleChangePassword}
-              showEditProfileModal={showEditProfileModal}
-              closeEditProfileModal={closeEditProfileModal}
-              editProfileName={editProfileName}
-              setEditProfileName={setEditProfileName}
-              profilePreviewName={editProfileName.trim() || currentUser?.name || 'You'}
-              profilePreviewInitials={getInitials(editProfileName || currentUser?.name || 'You')}
-              editProfileError={editProfileError}
-              editProfileSuccess={editProfileSuccess}
-              editProfileLoading={editProfileLoading}
-              handleEditProfileSubmit={handleEditProfileSubmit}
-            />
-          )}
+            <Route path="/account" element={currentUser ? (
+              <AccountPage
+                currentUser={currentUser}
+                defaultCurrency={defaultCurrency}
+                setDefaultCurrency={setDefaultCurrency}
+                convertINR={convertINR}
+                getCurrencySymbol={getCurrencySymbol}
+                selectedBudgetPeriod={selectedBudgetPeriod}
+                selectedBudgetMeta={selectedBudgetMeta}
+                budgetInput={budgetInput}
+                setBudgetInput={setBudgetInput}
+                setSelectedBudgetPeriod={setSelectedBudgetPeriod}
+                budgetSummaryCurrency={budgetSummaryCurrency}
+                setBudgetSummaryCurrency={setBudgetSummaryCurrency}
+                budgetAmount={budgetAmount}
+                budgetRemaining={budgetRemaining}
+                budgetProgress={budgetProgress}
+                spentForSelectedPeriod={spentForSelectedPeriod}
+                handleSaveBudget={handleSaveBudget}
+                settlementRemindersEnabled={settlementRemindersEnabled}
+                reminderDelayDays={reminderDelayDays}
+                handleToggleSettlementReminders={handleToggleSettlementReminders}
+                handleReminderDelayChange={handleReminderDelayChange}
+                defaultSplitMethod={defaultSplitMethod}
+                setDefaultSplitMethod={setDefaultSplitMethod}
+                accountThemePreference={accountThemePreference}
+                setAccountThemePreference={setAccountThemePreference}
+                setTheme={setTheme}
+                twoFactorEnabled={twoFactorEnabled}
+                setTwoFactorEnabled={setTwoFactorEnabled}
+                openPasswordModal={openPasswordModal}
+                openEditProfileModal={openEditProfileModal}
+                sessionItems={sessionItems}
+                handleExport={handleExport}
+                getInitials={getInitials}
+                handleToggleEmailNotifications={handleToggleEmailNotifications}
+                totalPaid={totalPaid}
+                totalReceived={totalReceived}
+                netSummary={netSummary}
+                settlementRate={settlementRate}
+                avgSettlementDays={avgSettlementDays}
+                memberSince={memberSince}
+                showPasswordModal={showPasswordModal}
+                closePasswordModal={closePasswordModal}
+                currentPassword={currentPassword}
+                setCurrentPassword={setCurrentPassword}
+                newPassword={newPassword}
+                setNewPassword={setNewPassword}
+                confirmNewPassword={confirmNewPassword}
+                setConfirmNewPassword={setConfirmNewPassword}
+                passwordChangeError={passwordChangeError}
+                passwordChangeSuccess={passwordChangeSuccess}
+                passwordChangeLoading={passwordChangeLoading}
+                handleChangePassword={handleChangePassword}
+                showEditProfileModal={showEditProfileModal}
+                closeEditProfileModal={closeEditProfileModal}
+                editProfileName={editProfileName}
+                setEditProfileName={setEditProfileName}
+                profilePreviewName={editProfileName.trim() || currentUser?.name || 'You'}
+                profilePreviewInitials={getInitials(editProfileName || currentUser?.name || 'You')}
+                editProfileError={editProfileError}
+                editProfileSuccess={editProfileSuccess}
+                editProfileLoading={editProfileLoading}
+                handleEditProfileSubmit={handleEditProfileSubmit}
+              />
+            ) : null} />
+            <Route path="*" element={<Navigate to="/home" replace />} />
+          </Routes>
         </main>
       </div>
 
@@ -2454,9 +2697,7 @@ function App() {
         className="fab"
         title="Add expense"
         onClick={() => {
-          setActiveTab('Expenses')
-          setGroupDetailView(null)
-          setFriendDetailView(null)
+          navigate('/expenses')
           setExpenseDetailView(null)
           resetExpenseForm()
           setEditingExpense(null)

@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 export type GroupsPageProps = Record<string, any>
 
 export default function GroupsPage(props: GroupsPageProps) {
+  const navigate = useNavigate()
+  const { groupId: routeGroupId } = useParams()
   const {
     groupOverview,
     showCreateGroupPanel,
@@ -24,7 +27,6 @@ export default function GroupsPage(props: GroupsPageProps) {
     handleAcceptGroupInvitation,
     handleDeclineGroupInvitation,
     users,
-    setGroupDetailView,
     setExpenseDetailView,
     resetExpenseForm,
     setEditingExpense,
@@ -32,7 +34,7 @@ export default function GroupsPage(props: GroupsPageProps) {
     setIsFriendExpense,
     setSelectedGroupId,
     setShowExpenseModal,
-    groupDetailView,
+    groupDetailView: propsGroupDetailView,
     groups,
     defaultCurrency,
     convertINR,
@@ -42,6 +44,8 @@ export default function GroupsPage(props: GroupsPageProps) {
     groupExpenses,
     fetchGroupExpenses,
   } = props
+
+  const groupDetailView = routeGroupId || propsGroupDetailView
 
   const [filterStatus, setFilterStatus] = useState('All expenses')
   const [sortOrder, setSortOrder] = useState('Newest first')
@@ -240,7 +244,7 @@ export default function GroupsPage(props: GroupsPageProps) {
 
         {/* Breadcrumb */}
         <div className="gw-breadcrumb">
-          <button onClick={() => { setGroupDetailView(null); setExpenseDetailView(null) }}>Groups</button>
+          <button onClick={() => { navigate('/groups'); setExpenseDetailView(null) }}>Groups</button>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           <span>{grp?.name || 'Group'}</span>
         </div>
@@ -693,7 +697,7 @@ export default function GroupsPage(props: GroupsPageProps) {
         )}
 
         {groupOverview.map(({ group, total, yourShare, unsettledCount, latestLabel }: any) => (
-          <div key={group.id} className="gl-card" onClick={() => { setSelectedGroupId(group.id); setGroupDetailView(group.id); fetchGroupExpenses(group.id) }}>
+          <div key={group.id} className="gl-card" onClick={() => { setSelectedGroupId(group.id); navigate(`/groups/${group.id}`); fetchGroupExpenses(group.id) }}>
             <div className="gl-card-top">
               <div className="gl-card-identity">
                 <div className="gl-card-avatar">{getInitials(group.name)}</div>
@@ -735,7 +739,7 @@ export default function GroupsPage(props: GroupsPageProps) {
               )}
               <div className="gl-card-actions" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                 <button className="gl-btn-edit" onClick={() => startEditGroup(group)}>Edit</button>
-                <button className="gl-btn-view" onClick={() => { setSelectedGroupId(group.id); setGroupDetailView(group.id); fetchGroupExpenses(group.id) }}>View</button>
+                <button className="gl-btn-view" onClick={() => { setSelectedGroupId(group.id); navigate(`/groups/${group.id}`); fetchGroupExpenses(group.id) }}>View</button>
               </div>
             </div>
           </div>

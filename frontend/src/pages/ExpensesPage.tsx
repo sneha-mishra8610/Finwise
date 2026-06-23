@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 
 export type ExpensesPageProps = Record<string, any>
 
@@ -17,6 +18,9 @@ function getCatColor(cat: string) {
 }
 
 export default function ExpensesPage(props: ExpensesPageProps) {
+  const navigate = useNavigate()
+  const { expenseId: routeExpenseId } = useParams()
+
   const {
     expenseStats, expenseFilterTabs, expenseViewFilter, setExpenseViewFilter,
     filteredExpenseFeed, expensesPage, EXPENSES_PAGE_SIZE,
@@ -34,19 +38,28 @@ export default function ExpensesPage(props: ExpensesPageProps) {
     expensePayerId, setExpensePayerId, selectedGroupId, setSelectedGroupId,
     splitMode, setSplitMode, customSplits, setCustomSplits, currentFriends,
     filteredGroups, editingExpense, expenseEditLogs, showExpenseModal, setShowExpenseModalState,
-    currentUser,
+    currentUser, expenseWorkspacePool, expenseDetailView,
   } = props
+
+  const selectedExpense = routeExpenseId
+    ? (expenseWorkspacePool || []).find((e: any) => e.id === routeExpenseId) || expenseDetailView
+    : expenseDetailView
 
   const sym = getCurrencySymbol(defaultCurrency)
   const fmt = (n: number) => `${sym}${convertINR(n, defaultCurrency).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   const [dialogExpense, setDialogExpense] = useState<any>(null)
 
+  useEffect(() => {
+    setDialogExpense(selectedExpense)
+  }, [selectedExpense])
+
   function openDialog(exp: any) {
-    setDialogExpense(exp)
-    setExpenseDetailView(exp)
+    navigate(`/expenses/${exp.id}`)
   }
   function closeDialog() {
+    navigate('/expenses')
+    setExpenseDetailView(null)
     setDialogExpense(null)
   }
 
@@ -464,7 +477,7 @@ export default function ExpensesPage(props: ExpensesPageProps) {
       `}</style>
 
       {/* Dialog */}
-      {dialogExpense && <ExpenseDialog exp={dialogExpense} />}
+      {dialogExpense && ExpenseDialog({ exp: dialogExpense })}
 
       {/* Hero */}
       <div className="ep-hero">

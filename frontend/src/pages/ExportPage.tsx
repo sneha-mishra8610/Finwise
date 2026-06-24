@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState } from 'react'
 export type ExportPageProps = Record<string, any>
 
 const EXPORT_TYPES = [
@@ -76,6 +77,7 @@ const EXPORT_TYPES = [
 
 export default function ExportPage(props: ExportPageProps) {
   const { handleExport } = props
+  const [period, setPeriod] = useState<string>('all')
 
   return (
     <div className="ep-shell">
@@ -84,6 +86,24 @@ export default function ExportPage(props: ExportPageProps) {
       <div className="ep-page-head">
         <h2 className="ep-title">Export Data</h2>
         <p className="ep-sub">Choose what you want to export</p>
+      </div>
+
+      {/* ── Period Selector ── */}
+      <div className="ep-controls">
+        <label htmlFor="exportPeriod" className="ep-label">Select Time Period:</label>
+        <select 
+          id="exportPeriod" 
+          className="ep-select" 
+          value={period} 
+          onChange={(e) => setPeriod(e.target.value)}
+        >
+          <option value="today">Today</option>
+          <option value="this_week">This Week</option>
+          <option value="this_month">This Month</option>
+          <option value="this_quarter">This Quarter</option>
+          <option value="this_year">This Year</option>
+          <option value="all">All Time</option>
+        </select>
       </div>
 
       {/* ── Export cards grid ── */}
@@ -112,7 +132,7 @@ export default function ExportPage(props: ExportPageProps) {
             <button
               type="button"
               className={`ep-export-btn ${t.btnClass}`}
-              onClick={() => handleExport(t.key as 'pdf' | 'word' | 'excel')}
+              onClick={() => handleExport(t.key as 'pdf' | 'word' | 'excel', period)}
             >
               {t.btnLabel}
             </button>
@@ -140,6 +160,20 @@ export default function ExportPage(props: ExportPageProps) {
         .ep-page-head { padding: 0.25rem 0 0.5rem; }
         .ep-title { margin: 0 0 0.3rem; font-size: 1.45rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
         .ep-sub { margin: 0; font-size: 0.86rem; color: rgba(255,255,255,0.5); }
+
+        .ep-controls { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem; }
+        .ep-label { font-size: 0.9rem; font-weight: 600; color: rgba(255,255,255,0.8); }
+        .ep-select { 
+          background: rgba(255,255,255,0.06); 
+          border: 1px solid rgba(255,255,255,0.15); 
+          color: #fff; 
+          border-radius: 8px; 
+          padding: 0.4rem 0.8rem; 
+          font-size: 0.9rem; 
+          outline: none; 
+        }
+        .ep-select:focus { border-color: #a78bfa; }
+        .ep-select option { background: #121122; color: #fff; }
 
         .ep-cards-grid {
           display: grid;
@@ -251,6 +285,13 @@ export default function ExportPage(props: ExportPageProps) {
         /* ── Light mode ── */
         .app.light-mode .ep-title { color: var(--text-light,#2f2050); }
         .app.light-mode .ep-sub { color: rgba(47,32,80,0.54); }
+        .app.light-mode .ep-label { color: var(--text-light,#2f2050); }
+        .app.light-mode .ep-select { 
+          background: #fff; 
+          border-color: rgba(47,32,80,0.15); 
+          color: var(--text-light,#2f2050); 
+        }
+        .app.light-mode .ep-select option { background: #fff; color: var(--text-light,#2f2050); }
         .app.light-mode .ep-card {
           background: #fff;
           box-shadow: 0 4px 14px rgba(108,92,231,0.07);

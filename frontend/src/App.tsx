@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import './App.css'
 import React, { useEffect, useState, useCallback } from 'react'
@@ -1357,12 +1358,12 @@ function App() {
     if (res.ok) await fetchUsers()
   }
 
-  async function handleExport(format: 'pdf' | 'word' | 'excel') {
+  async function handleExport(format: 'pdf' | 'word' | 'excel', period: string = 'all') {
     if (!currentUserId) return
     const map = {
-      pdf: { endpoint: `${API_BASE}/export/pdf/${currentUserId}`, filename: 'finwise-data.pdf', mime: 'application/pdf' },
-      word: { endpoint: `${API_BASE}/export/word/${currentUserId}`, filename: 'finwise-data.docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
-      excel: { endpoint: `${API_BASE}/export/excel/${currentUserId}`, filename: 'finwise-data.xlsx', mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+      pdf: { endpoint: `${API_BASE}/export/pdf/${currentUserId}?period=${period}`, filename: `finwise-data-${period}.pdf`, mime: 'application/pdf' },
+      word: { endpoint: `${API_BASE}/export/word/${currentUserId}?period=${period}`, filename: `finwise-data-${period}.docx`, mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
+      excel: { endpoint: `${API_BASE}/export/excel/${currentUserId}?period=${period}`, filename: `finwise-data-${period}.xlsx`, mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
     }
     const { endpoint, filename, mime } = map[format]
     try {

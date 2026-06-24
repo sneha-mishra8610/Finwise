@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useParams, useNavigate } from 'react-router-dom'
 export type FriendsPageProps = Record<string, any>
 

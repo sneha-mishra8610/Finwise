@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 export type GroupsPageProps = Record<string, any>
 
@@ -48,7 +48,12 @@ export default function GroupsPage(props: GroupsPageProps) {
   const groupDetailView = routeGroupId || propsGroupDetailView
 
   const [filterStatus, setFilterStatus] = useState('All expenses')
-  const [sortOrder, setSortOrder] = useState('Newest first')
+  const [sortOrder, setSortOrder] = useState('Newest first');
+  const [displayCount, setDisplayCount] = useState(10);
+
+  useEffect(() => {
+    setDisplayCount(10);
+  }, [groupDetailView]);
 
   const sym = getCurrencySymbol(defaultCurrency)
   const fmt = (n: number) => `${sym}${convertINR(n, defaultCurrency).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -57,31 +62,26 @@ export default function GroupsPage(props: GroupsPageProps) {
     return name.split(' ').filter(Boolean).slice(0, 1).map((p: string) => p[0]?.toUpperCase()).join('')
   }
 
-  // ── GROUP WORKSPACE (detail view) ──────────────────────────────────────────
   if (groupDetailView) {
     const grp = groups.find((g: any) => g.id === groupDetailView)
 
-    // Apply filter
     const filtered = groupExpenses.filter((e: any) => {
       if (filterStatus === 'Settled') return e.expenseStatus === 'Settled'
       if (filterStatus === 'Unsettled') return e.expenseStatus !== 'Settled'
       return true
     })
 
-    // Apply sort
     const sorted = [...filtered].sort((a: any, b: any) => {
       const da = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const db = b.createdAt ? new Date(b.createdAt).getTime() : 0
       return sortOrder === 'Oldest first' ? da - db : db - da
     })
 
-    // Stats always from all expenses (unfiltered)
     const allExpenses = [...groupExpenses]
     const settledCount = allExpenses.filter((e: any) => e.expenseStatus === 'Settled').length
     const unsettledCount = allExpenses.length - settledCount
     const totalSpent = allExpenses.reduce((s: number, e: any) => s + e.amount, 0)
 
-    // Per-member spending for donut
     const memberIds: string[] = grp?.memberIds || []
     const memberTotals = memberIds.map((mid: string) => {
       const member = users.find((u: any) => u.id === mid)
@@ -89,7 +89,6 @@ export default function GroupsPage(props: GroupsPageProps) {
       return { id: mid, name: member?.name || 'Unknown', spent }
     }).sort((a: any, b: any) => b.spent - a.spent)
 
-    // Top categories
     const catMap: Record<string, number> = {}
     sorted.forEach((e: any) => {
       const cat = e.tag || 'miscellaneous'
@@ -99,7 +98,6 @@ export default function GroupsPage(props: GroupsPageProps) {
 
     const colors = ['#6c5ce7', '#2dcc8e', '#f4a93d', '#e17055', '#74b9ff', '#fd79a8']
 
-    // Donut SVG
     const donutSize = 160, donutStroke = 22
     const r = (donutSize - donutStroke) / 2
     const circ = 2 * Math.PI * r
@@ -112,7 +110,6 @@ export default function GroupsPage(props: GroupsPageProps) {
       return { ...m, dash, offset, color: colors[i % colors.length], pct }
     })
 
-    // member since
     const memberSince = grp?.name ? `Group since ${new Date().toLocaleString('default', { month: 'short', year: 'numeric' })}` : ''
 
     return (
@@ -244,7 +241,7 @@ export default function GroupsPage(props: GroupsPageProps) {
 
         {/* Breadcrumb */}
         <div className="gw-breadcrumb">
-          <button onClick={() => { navigate('/groups'); setExpenseDetailView(null) }}>Groups</button>
+          <button onClick={() => { navigate('/groups'); }}>Groups</button>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           <span>{grp?.name || 'Group'}</span>
         </div>
@@ -261,15 +258,7 @@ export default function GroupsPage(props: GroupsPageProps) {
               </div>
             </div>
           </div>
-          <div className="gw-hero-actions">
-            <button className="gw-btn-primary" onClick={() => { resetExpenseForm(); setEditingExpense(null); setIsGroupExpense(true); setIsFriendExpense(false); setSelectedGroupId(groupDetailView); setShowExpenseModal(true) }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Expense
-            </button>
-            <button className="gw-btn-ghost" title="More options">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-            </button>
-          </div>
+
         </div>
 
         {/* Stats strip */}
@@ -439,7 +428,7 @@ export default function GroupsPage(props: GroupsPageProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {sorted.slice(0, 10).map((exp: any, idx: number) => {
+                  {sorted.slice(0, displayCount).map((exp: any, idx: number) => {
                     const payer = users.find((u: any) => u.id === exp.payerId)
                     const payerName = payer?.name || 'Unknown'
                     const share = exp.customSplits?.[props.currentUserId] ?? (exp.amount / Math.max((exp.participantIds || []).length, 1))
@@ -485,11 +474,15 @@ export default function GroupsPage(props: GroupsPageProps) {
                   })}
                 </tbody>
               </table>
-              {sorted.length > 10 && (
+              {sorted.length > displayCount && (
                 <div className="gw-load-more">
-                  <button className="gw-load-btn">
+                  <button className="gw-load-btn" onClick={() => setDisplayCount(prev => Math.min(prev + 10, sorted.length))}>
                     Load more
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                  </button>
+                  <button className="gw-load-btn" style={{ marginLeft: '0.5rem' }} onClick={() => setDisplayCount(sorted.length)}>
+                    Load all
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>
                   </button>
                 </div>
               )}
@@ -500,7 +493,6 @@ export default function GroupsPage(props: GroupsPageProps) {
     )
   }
 
-  // ── GROUPS LIST ─────────────────────────────────────────────────────────────
   return (
     <div className="gl-shell">
       <style>{`

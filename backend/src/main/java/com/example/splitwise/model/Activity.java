@@ -18,20 +18,8 @@ public class Activity {
     private String relatedGroupId;
     private Instant createdAt = Instant.now();
 
-    /**
-     * Whether the user has seen/read this activity entry.
-     * Used to power the notifications unread-inbox.
-     * Permanent activities (EXPENSE_ADDED, EXPENSE_SETTLED, etc.) start as read=true
-     * since they are already surfaced in the Activity page without needing a notification.
-     * EXPENSE_OWED and SETTLEMENT_REMINDER start as read=false so they appear in the
-     * notification panel until dismissed.
-     */
     private boolean read = false;
 
-    /**
-     * For SETTLEMENT_REMINDER activities, stores the notification-type label
-     * ("OWE" or "OWED") to allow the frontend to style them correctly.
-     */
     private String notificationType;
 
     public enum ActivityType {
@@ -116,8 +104,6 @@ public class Activity {
     public void setNotificationType(String notificationType) {
         this.notificationType = notificationType;
     }
-
-    // ── Object overrides ─────────────────────────────────────────────────────
 
     @Override
     public boolean equals(Object o) {

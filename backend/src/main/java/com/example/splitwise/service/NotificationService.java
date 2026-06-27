@@ -27,19 +27,6 @@ import com.example.splitwise.repository.ExpenseRepository;
 import com.example.splitwise.repository.NotificationRepository;
 import com.example.splitwise.repository.UserRepository;
 
-/**
- * NotificationService is now a thin adapter layer.
- *
- * All reminder-scheduling logic has been moved to {@link ActivityService}.
- * This service:
- *   1. Delegates reminder generation to ActivityService
- *   2. Reads the Notification collection for the existing /api/notifications endpoints
- *   3. On markRead, also cascades to mark the parent Activity rows as read
- *      (via the activityId link on each Notification)
- *
- * The existing controller API surface (/api/notifications/**) is preserved
- * so the frontend requires no changes.
- */
 @Service
 public class NotificationService {
 
@@ -63,20 +50,11 @@ public class NotificationService {
     @Autowired
     private ActivityService activityService;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Public API (unchanged signatures — controller compatibility maintained)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Triggers the reminder engine (now in ActivityService) then returns the
-     * merged list of all notifications for the user (new + previously persisted).
-     */
     public List<Notification> getScheduledNotifications(String userId, String preferredCurrency) {
-        // Run the reminder engine — writes new Activity + Notification rows if due
+        
         List<Notification> newlyCreated = activityService
                 .generateAndRecordSettlementReminders(userId, preferredCurrency);
 
-        // Merge with all persisted notifications (deduped by key, latest wins)
         List<Notification> persisted = new ArrayList<>();
         try {
             persisted = notificationRepository.findByUserIdOrderByLastSentDesc(userId);
@@ -88,7 +66,6 @@ public class NotificationService {
 
         List<Notification> merged = new ArrayList<>(latestByKey.values());
 
-        // Load all unread activities and merge them as dynamic notifications if not already represented
         List<Activity> unreadActivities = new ArrayList<>();
         try {
             unreadActivities = activityRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
@@ -117,10 +94,6 @@ public class NotificationService {
         return merged;
     }
 
-    /**
-     * Returns only unread notifications for the user.
-     * Triggers the reminder engine first (same as getScheduledNotifications).
-     */
     public List<Notification> getUnreadNotifications(String userId, String preferredCurrency) {
         List<Notification> all = getScheduledNotifications(userId, preferredCurrency);
         List<Notification> unread = new ArrayList<>();
@@ -142,10 +115,6 @@ public class NotificationService {
         return notificationRepository.countByUserIdAndReadTrue(userId);
     }
 
-    /**
-     * Marks the given notification IDs as read in the Notification collection
-     * AND cascades to mark the parent Activity rows as read (via activityId link).
-     */
     public void markNotificationsRead(String userId, List<String> notificationIds) {
         if (userId == null || userId.isBlank() || notificationIds == null || notificationIds.isEmpty()) return;
 
@@ -166,20 +135,15 @@ public class NotificationService {
                     }
                 }
             } catch (Exception ignored) {}
-            // Treat the ID as an activity ID too (for dynamic notifications)
+
             activityIds.add(id);
         }
 
-        // Cascade: mark the parent Activity rows as read too
         if (!activityIds.isEmpty()) {
             activityService.markActivitiesRead(userId, activityIds);
         }
     }
 
-    /**
-     * Manual "Send reminder to friend" — now delegates Activity creation to
-     * ActivityService and only handles the Expense query + amount calculation here.
-     */
     public Map<String, Object> sendReminderToFriend(String userId, String friendId) {
         List<Expense> expenses = expenseRepository.findByBothParticipants(userId, friendId);
         logger.info("[sendReminderToFriend] userId={}, friendId={}, found {} expenses",
@@ -205,7 +169,6 @@ public class NotificationService {
             String message = "Reminder: You owe " + payerName + " " + currency + " " + normalizedAmount
                     + " for \"" + expense.getDescription() + "\".";
 
-            // Delegate to ActivityService — writes Activity + Notification atomically
             Notification saved = activityService.recordManualReminder(userId, friendId, expense, message);
             notificationIds.add(saved.getId());
             logger.info("[sendReminderToFriend] reminder written friendId={} expenseId={}", friendId, expense.getId());
@@ -217,10 +180,6 @@ public class NotificationService {
         result.put("notificationIds", notificationIds);
         return result;
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Private helpers
-    // ─────────────────────────────────────────────────────────────────────────
 
     private String notificationKey(Notification n) {
         if (n == null) return "";

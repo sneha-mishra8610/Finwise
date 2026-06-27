@@ -32,6 +32,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
+
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

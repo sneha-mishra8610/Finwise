@@ -20,7 +20,6 @@ export default function ActivityPage(props: ActivityPageProps) {
     getActivityCategory,
   } = props
 
-  // Map category to color/label/icon
   function getCategoryStyle(cat: string): { color: string; bg: string; label: string } {
     switch (cat) {
       case 'EXPENSE':
@@ -44,8 +43,8 @@ export default function ActivityPage(props: ActivityPageProps) {
         bg: tone === 'positive'
           ? 'linear-gradient(135deg,#ff9f43,#ffb142)'
           : tone === 'negative'
-          ? 'linear-gradient(135deg,#ff6b6b,#ee5253)'
-          : 'linear-gradient(135deg,#ff9f43,#ffb142)',
+            ? 'linear-gradient(135deg,#ff6b6b,#ee5253)'
+            : 'linear-gradient(135deg,#ff9f43,#ffb142)',
         icon: (
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -55,31 +54,36 @@ export default function ActivityPage(props: ActivityPageProps) {
       }
     }
     const base = {
-      positive: { bg: 'linear-gradient(135deg,#00b894,#00cec9)', icon: (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-      )},
-      negative: { bg: 'linear-gradient(135deg,#d63031,#e17055)', icon: (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
-      )},
-      neutral: { bg: cat === 'SETTLEMENT'
-        ? 'linear-gradient(135deg,#00b894,#2dcc8e)'
-        : cat === 'EXPENSE'
-        ? 'linear-gradient(135deg,#6c5ce7,#a29bfe)'
-        : cat === 'FRIEND'
-        ? 'linear-gradient(135deg,#e17055,#fd79a8)'
-        : 'linear-gradient(135deg,#0984e3,#74b9ff)', icon: (
-        cat === 'SETTLEMENT'
-          ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      positive: {
+        bg: 'linear-gradient(135deg,#00b894,#00cec9)', icon: (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+        )
+      },
+      negative: {
+        bg: 'linear-gradient(135deg,#d63031,#e17055)', icon: (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" /></svg>
+        )
+      },
+      neutral: {
+        bg: cat === 'SETTLEMENT'
+          ? 'linear-gradient(135deg,#00b894,#2dcc8e)'
           : cat === 'EXPENSE'
-          ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-      )},
+            ? 'linear-gradient(135deg,#6c5ce7,#a29bfe)'
+            : cat === 'FRIEND'
+              ? 'linear-gradient(135deg,#e17055,#fd79a8)'
+              : 'linear-gradient(135deg,#0984e3,#74b9ff)', icon: (
+                cat === 'SETTLEMENT'
+                  ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                  : cat === 'EXPENSE'
+                    ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+                    : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+              )
+      },
     }
     const key = tone as 'positive' | 'negative' | 'neutral'
     return base[key] || base.neutral
   }
 
-  // Parse user name from activity description (heuristic)
   function extractUser(description: string): string {
     const parts = description.split(' ')
     if (parts.length > 0) return parts[0]
@@ -575,16 +579,7 @@ export default function ActivityPage(props: ActivityPageProps) {
           <h2 className="av2-hero-title">Activity</h2>
           <p className="av2-hero-sub">Stay updated with all your transactions and important updates.</p>
         </div>
-        <div className="av2-hero-actions">
-          <button className="av2-btn-export">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export
-          </button>
-          <button className="av2-btn-add">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add activity
-          </button>
-        </div>
+
       </div>
 
       {/* ── Stats ── */}
@@ -592,7 +587,7 @@ export default function ActivityPage(props: ActivityPageProps) {
         <div className="av2-stat">
           <div className="av2-stat-icon" style={{ background: 'rgba(108,92,231,0.18)' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a29bfe" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
           </div>
           <div className="av2-stat-body">
@@ -605,7 +600,7 @@ export default function ActivityPage(props: ActivityPageProps) {
         <div className="av2-stat">
           <div className="av2-stat-icon" style={{ background: 'rgba(45,204,142,0.15)' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dcc8e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
             </svg>
           </div>
           <div className="av2-stat-body">
@@ -618,7 +613,7 @@ export default function ActivityPage(props: ActivityPageProps) {
         <div className="av2-stat">
           <div className="av2-stat-icon" style={{ background: 'rgba(255,92,92,0.14)' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff5c5c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+              <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" />
             </svg>
           </div>
           <div className="av2-stat-body">
@@ -648,7 +643,7 @@ export default function ActivityPage(props: ActivityPageProps) {
         </div>
         <div className="av2-sort-wrap">
           <div className="av2-sort-btn">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg>
             <select
               className="av2-sort-select"
               value={activitySortOrder}
@@ -657,10 +652,10 @@ export default function ActivityPage(props: ActivityPageProps) {
               <option value="NEWEST">Newest first</option>
               <option value="OLDEST">Oldest first</option>
             </select>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
           </div>
           <div className="av2-filter-icon-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="6" x2="20" y2="6" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="11" y1="18" x2="13" y2="18" /></svg>
           </div>
         </div>
       </div>
@@ -669,14 +664,14 @@ export default function ActivityPage(props: ActivityPageProps) {
       {activityFilterLoading ? (
         <div className="av2-empty">
           <div className="av2-empty-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
           </div>
           <p className="av2-empty-title">Loading activities…</p>
         </div>
       ) : activityGroups.length === 0 ? (
         <div className="av2-empty">
           <div className="av2-empty-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
           </div>
           <p className="av2-empty-title">No activity yet</p>
           <p className="av2-empty-sub">Try a different filter or add an expense to get started.</p>
@@ -688,7 +683,7 @@ export default function ActivityPage(props: ActivityPageProps) {
               <div className="av2-day-header">
                 <div className="av2-day-label">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                    <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
                   </svg>
                   {group.label}
                 </div>
@@ -750,15 +745,28 @@ export default function ActivityPage(props: ActivityPageProps) {
       {/* ── Load more ── */}
       {activityHasMore && (
         <div className="av2-load-more">
+          {/* Load more button */}
           <button
             className="av2-load-btn"
             onClick={async () => {
-              const next = activityPage + 1
-              setActivityPage(next)
-              await fetchActivities(currentUserId, next, true)
+              const next = activityPage + 1;
+              setActivityPage(next);
+              await fetchActivities(currentUserId, next, true);
             }}
           >
             Load more activities
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          {/* Load all button */}
+          <button
+            className="av2-load-btn"
+            onClick={async () => {
+              await fetchActivities(currentUserId, 0, false, true);
+              setActivityPage(0);
+              setActivityHasMore(false);
+            }}
+          >
+            Load all activities
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
           </button>
         </div>

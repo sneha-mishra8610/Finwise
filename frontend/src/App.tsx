@@ -531,8 +531,6 @@ function App() {
   const budgetPeriodMeta = getBudgetPeriodMeta(selectedBudgetPeriod, new Date())
   const budgetStorageKey = `budget:${selectedBudgetPeriod}`
 
-  // ── Effects ──────────────────────────────────────────────────────────────
-
   useEffect(() => { setEditLogDisplayCount(3) }, [expenseDetailView])
   useEffect(() => { setWorkspaceExpenseSearch(''); setWorkspaceExpenseStatusFilter('ALL'); setWorkspaceExpenseDateFilter('ALL') }, [groupDetailView, friendDetailView])
   useEffect(() => { setWorkspaceExpensesPage(1) }, [groupDetailView, friendDetailView])
@@ -714,8 +712,6 @@ function App() {
     return () => clearTimeout(timer)
   }, [showNotifications, unreadNotifications]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-
   function convertINR(amount: number, toCurrency: string): number {
     return amount * (exchangeRates[toCurrency] || 1)
   }
@@ -873,8 +869,6 @@ function App() {
     }, 0)
   }
 
-  // ── API calls ─────────────────────────────────────────────────────────────
-
   const fetchUserBudgets = React.useCallback(async (userId?: string) => {
     if (!userId) return
     try {
@@ -965,14 +959,15 @@ function App() {
     } catch { /* ignore */ }
   }, [authedFetch, currentUserId])
 
-  async function fetchActivities(userId: string, page = 0, append = false): Promise<Activity[] | undefined> {
+  async function fetchActivities(userId: string, page = 0, append = false, loadAll?: boolean): Promise<Activity[] | undefined> {
     try {
-      const res = await authedFetch(`${API_BASE}/activities/${userId}?page=${page}&size=20`)
+      const size = loadAll ? 1000 : 20;
+      const res = await authedFetch(`${API_BASE}/activities/${userId}?page=${page}&size=${size}`)
       if (!res.ok) return undefined
       const data = await res.json()
       if (Array.isArray(data)) {
         append ? setActivities(prev => [...prev, ...data]) : setActivities(data)
-        setActivityHasMore(data.length === 20)
+        setActivityHasMore(data.length === size)
         return data
       }
       if (!append) setActivities([])
@@ -1006,8 +1001,6 @@ function App() {
     } catch { setDashboardError('Could not reach server') }
     finally { setDashboardLoading(false) }
   }
-
-  // ── Auth handlers ─────────────────────────────────────────────────────────
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault(); setSignupError('')
@@ -1059,7 +1052,33 @@ function App() {
     finally { setLoginLoading(false) }
   }
 
-  // ── Expense handlers ──────────────────────────────────────────────────────
+  async function handleGoogleSignIn(credential: string) {
+    setLoginError('')
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: credential }),
+      })
+      if (res.ok) {
+        const data: AuthResponse = await res.json()
+        localStorage.setItem('authToken', data.token)
+        localStorage.setItem('currentUserId', data.user.id)
+        setAuthToken(data.token)
+        setUsers([data.user])
+        setCurrentUserId(data.user.id)
+      } else {
+        const message = await res.text().catch(() => '')
+        setLoginError(message || `Google sign-in failed (${res.status})`)
+      }
+    } catch (error) {
+      setLoginError(
+        error instanceof DOMException && error.name === 'AbortError'
+          ? 'Google sign-in timed out. Please try again.'
+          : 'Could not reach server'
+      )
+    }
+  }
 
   async function handleSaveExpense(e: React.FormEvent) {
     e.preventDefault()
@@ -1184,8 +1203,6 @@ function App() {
     } catch { /* ignore */ }
   }, [authedFetch, currentUserId, refreshExpenseDetail, allGroupExpenses, personalExpenses, fetchAllGroupExpenses, fetchGroupExpenses, fetchPersonalExpenses])
 
-  // ── Friend handlers ───────────────────────────────────────────────────────
-
   async function handleAddFriend(e: React.FormEvent) {
     e.preventDefault()
     if (!currentUserId || !friendEmailToAdd.trim()) return
@@ -1243,8 +1260,6 @@ function App() {
     await fetchActivities(currentUserId)
   }
 
-  // ── Group handlers ────────────────────────────────────────────────────────
-
   async function handleCreateGroup(e: React.FormEvent) {
     e.preventDefault()
     if (!currentUserId || !groupName) return
@@ -1288,8 +1303,6 @@ function App() {
       if (res.ok) await fetchGroupInvitations()
     } catch { /* ignore */ }
   }
-
-  // ── Account handlers ──────────────────────────────────────────────────────
 
   async function handleSaveBudget(event: React.FormEvent) {
     event.preventDefault()
@@ -1423,8 +1436,6 @@ function App() {
     finally { setPasswordChangeLoading(false) }
   }
 
-  // ── Notification handlers ─────────────────────────────────────────────────
-
   function getNotificationTitle(type: string): string {
     switch (type) {
       case 'OWED': return 'You are owed';
@@ -1490,8 +1501,6 @@ function App() {
     if (!currentUserId) { setNotificationError('No user selected.'); return }
     void fetchNotifications(true, true)
   }
-
-  // ── Derived data ──────────────────────────────────────────────────────────
 
   const filteredGroups = groups.filter(g => g.name.toLowerCase().includes(groupSearch.toLowerCase()))
   const sortedGroups = [...filteredGroups].sort((a, b) => a.name.localeCompare(b.name))
@@ -1728,8 +1737,6 @@ function App() {
     }
   })
 
-  // ── Workspace dashboard renderer ──────────────────────────────────────────
-
   function renderWorkspaceDashboard(config: {
     title: string; subtitle: string; breadcrumb: string; expenses: Expense[]
     participants: User[]; onBack: () => void; onAddExpense: () => void
@@ -1941,8 +1948,6 @@ function App() {
     )
   }
 
-  // ── Unauthenticated ───────────────────────────────────────────────────────
-
   if (!isAuthenticated) {
     return (
       <div className={`app ${theme === 'light' ? 'light-mode' : ''}`}>
@@ -1965,12 +1970,11 @@ function App() {
           loginLoading={loginLoading}
           onSignupSubmit={handleSignup}
           onLoginSubmit={handleLogin}
+          onGoogleSignIn={handleGoogleSignIn}
         />
       </div>
     )
   }
-
-  // ── Authenticated shell ───────────────────────────────────────────────────
 
   return (
     <div className={`app ${theme === 'light' ? 'light-mode' : ''}`}>
@@ -2012,11 +2016,7 @@ function App() {
                 </svg>
               </div>
               <h2 className="notif-header-title">Notifications</h2>
-              <button className="notif-close-btn" onClick={() => setShowNotifications(false)} aria-label="Close">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
+              <button className="notif-close-btn" onClick={() => setShowNotifications(false)} aria-label="Close">✕</button>
             </div>
 
             {/* Tabs */}
@@ -2716,11 +2716,7 @@ function App() {
             {/* Header */}
             <div className="gchat-header">
               <h2 className="gchat-title">Group chat</h2>
-              <button className="gchat-close" onClick={() => setShowQuickGroupChat(false)} aria-label="Close">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
+              <button className="gchat-close" onClick={() => setShowQuickGroupChat(false)} aria-label="Close">✕</button>
             </div>
 
             {/* Group selector */}
@@ -2759,9 +2755,9 @@ function App() {
               )}
               {quickChatGroupId && (groupChats[quickChatGroupId] || []).map((msg: any, i: number) => {
                 const isSelf = msg.user === currentUserName
-                // Get initials from name
+
                 const initials = msg.user.split(' ').filter(Boolean).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join('')
-                // Deterministic avatar color from name
+
                 const avatarColors = ['#6c5ce7', '#0984e3', '#00b894', '#d63031', '#e17055', '#fdcb6e', '#a29bfe', '#fd79a8']
                 const colorIdx = msg.user.split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), 0) % avatarColors.length
                 const avatarBg = avatarColors[colorIdx]

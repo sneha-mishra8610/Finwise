@@ -1,4 +1,20 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (cfg: object) => void
+          prompt: () => void
+          renderButton: (el: HTMLElement, cfg: object) => void
+        }
+      }
+    }
+  }
+}
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string
 
 export type AuthPageProps = {
   theme: 'dark' | 'light'
@@ -19,6 +35,7 @@ export type AuthPageProps = {
   loginError: string
   onSignupSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>
   onLoginSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>
+  onGoogleSignIn?: (credential: string) => Promise<void>
 }
 
 const features = [
@@ -69,10 +86,52 @@ export default function AuthPage({
   setSignupName, setSignupEmail, setSignupPassword, signupError,
   loginEmail, loginPassword, loginLoading = false,
   setLoginEmail, setLoginPassword, loginError,
-  onSignupSubmit, onLoginSubmit,
+  onSignupSubmit, onLoginSubmit, onGoogleSignIn,
 }: AuthPageProps) {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [showPw, setShowPw] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+
+  // Load Google Identity Services script and initialize
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID || !onGoogleSignIn) return
+
+    const scriptId = 'google-gsi-script'
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script')
+      script.id = scriptId
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.defer = true
+      document.head.appendChild(script)
+    }
+  }, [onGoogleSignIn])
+
+  async function handleGoogleButtonClick() {
+    if (!GOOGLE_CLIENT_ID || !onGoogleSignIn || !window.google) return
+    setGoogleLoading(true)
+    try {
+      await new Promise<void>((resolve, reject) => {
+        window.google!.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: async (response: { credential: string }) => {
+            try {
+              await onGoogleSignIn!(response.credential)
+              resolve()
+            } catch (e) {
+              reject(e)
+            }
+          },
+          ux_mode: 'popup',
+        })
+        window.google!.accounts.id.prompt()
+      })
+    } catch {
+      // silently ignore — errors handled in parent
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
 
   return (
     <div className="aw-root">
@@ -214,25 +273,32 @@ export default function AuthPage({
                       : 'Log in to Finwise'}
                   </button>
 
-                  <div className="aw-or-row"><span/><p>or continue with</p><span/></div>
-
-                  <div className="aw-social-row">
-                    <button type="button" className="aw-social-btn">
-                      <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                      </svg>
-                      Google
-                    </button>
-                    <button type="button" className="aw-social-btn">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                      </svg>
-                      Apple
-                    </button>
-                  </div>
+                  {onGoogleSignIn && (
+                    <>
+                      <div className="aw-or-row"><span/><p>or continue with</p><span/></div>
+                      <button
+                        type="button"
+                        className="aw-social-btn aw-google-btn"
+                        onClick={handleGoogleButtonClick}
+                        disabled={googleLoading}
+                        id="login-google-btn"
+                      >
+                        {googleLoading ? (
+                          <span className="aw-loading"><span className="aw-spinner"/>Connecting…</span>
+                        ) : (
+                          <>
+                            <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                            Sign in with Google
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
 
                   <p className="aw-switch-hint">
                     New to Finwise?{' '}
@@ -334,6 +400,33 @@ export default function AuthPage({
                       ? <span className="aw-loading"><span className="aw-spinner"/>Creating account…</span>
                       : 'Create account'}
                   </button>
+
+                  {onGoogleSignIn && (
+                    <>
+                      <div className="aw-or-row"><span/><p>or sign up with</p><span/></div>
+                      <button
+                        type="button"
+                        className="aw-social-btn aw-google-btn"
+                        onClick={handleGoogleButtonClick}
+                        disabled={googleLoading}
+                        id="signup-google-btn"
+                      >
+                        {googleLoading ? (
+                          <span className="aw-loading"><span className="aw-spinner"/>Connecting…</span>
+                        ) : (
+                          <>
+                            <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                            Sign up with Google
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
 
                   <p className="aw-switch-hint">
                     Already have an account?{' '}
@@ -825,6 +918,18 @@ export default function AuthPage({
         .aw-social-btn:hover {
           background: rgba(255,255,255,0.08);
           border-color: rgba(255,255,255,0.16);
+        }
+        .aw-social-btn:disabled {
+          opacity: 0.52;
+          cursor: not-allowed;
+        }
+        .aw-google-btn {
+          width: 100%;
+          border-color: rgba(255,255,255,0.13);
+        }
+        .aw-google-btn:hover:not(:disabled) {
+          background: rgba(66,133,244,0.08);
+          border-color: rgba(66,133,244,0.3);
         }
 
         /* Switch hint */

@@ -9,7 +9,7 @@
   width: 100% !important;
   max-width: 100% !important;
 }
-/* ── Root ── */
+
 :root {
   --primary: #6c5ce7;
   --primary-hover: #5b4bd6;
@@ -51,7 +51,6 @@
   width: 100%;
 }
 
-/* ── App shell ── */
 .app {
   min-height: 100vh;
   display: flex;
@@ -64,7 +63,6 @@
   font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* ── Header ── */
 .app-header {
   display: flex;
   align-items: center;
@@ -154,7 +152,6 @@
   background: #f57c00 !important;
 }
 
-/* ── Tabs ── */
 .tabs {
   display: flex;
   gap: 0.25rem;
@@ -193,7 +190,6 @@
   width: 180px;
 }
 
-/* ── Auth layout ── */
 .auth-layout {
   display: flex;
   gap: 2rem;
@@ -209,7 +205,6 @@
   flex: 1;
 }
 
-/* ── Layout (sidebar + main) ── */
 .layout {
   display: flex;
   flex: 1;
@@ -328,7 +323,6 @@
   width: 100%;
 }
 
-/* ── Panels ── */
 .panel {
   background: linear-gradient(180deg, rgba(35, 35, 54, 0.95), rgba(28, 28, 45, 0.95));
   border: 1px solid var(--border-dark);
@@ -351,7 +345,6 @@
   letter-spacing: 0.2px;
 }
 
-/* ── Forms ── */
 .form-vertical {
   display: flex;
   flex-direction: column;
@@ -492,7 +485,6 @@ select:focus {
 .splits-ok  { background: rgba(46,204,142,0.12); color: #2ecc8e; }
 .splits-off { background: rgba(255,107,107,0.12); color: #ff6b6b; }
 
-/* ── Lists ── */
 .list {
   list-style: none;
   padding: 0;
@@ -504,7 +496,6 @@ select:focus {
   border-bottom: 1px solid #2a2a3a;
 }
 
-/* ── Cards (expenses) ── */
 .card-list {
   list-style: none;
   padding: 0;
@@ -557,7 +548,6 @@ select:focus {
   border-radius: 7px;
 }
 
-/* ── Expenses columns ── */
 .expenses-columns {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -570,7 +560,6 @@ select:focus {
   margin-bottom: 0.5rem;
 }
 
-/* ── Pill buttons (group members) ── */
 .pill-list {
   display: flex;
   flex-wrap: wrap;
@@ -593,7 +582,6 @@ select:focus {
   border-color: #5c4dff;
 }
 
-/* ── Utility ── */
 .muted {
   color: var(--text-muted-dark);
   font-size: 0.85rem;
@@ -617,7 +605,6 @@ select:focus {
   margin: 0;
 }
 
-/* ── Inline form row ── */
 .form-inline-row {
   display: flex;
   gap: 0.6rem;
@@ -634,7 +621,6 @@ select:focus {
   white-space: nowrap;
 }
 
-/* ── Icon buttons (edit / delete) ── */
 .icon-btn {
   background: transparent;
   border: 1px solid #555;
@@ -655,7 +641,6 @@ select:focus {
   border-color: #ff6b6b;
 }
 
-/* ── Group name button ── */
 .group-name-btn {
   background: transparent;
   border: none;
@@ -671,7 +656,6 @@ select:focus {
   text-decoration: underline;
 }
 
-/* ── FAB (Floating Action Button) ── */
 .fab {
   position: fixed;
   bottom: 2rem;
@@ -752,7 +736,6 @@ select:focus {
   gap: 0.55rem;
 }
 
-/* ── Modal overlay ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -794,8 +777,33 @@ select:focus {
 }
 
 .modal-close:hover {
-  color: #fff;
+  color: #ff4d4d;
 }
+
+.modal-close,
+.gchat-close,
+.notif-close-btn {
+  color: #ff4d4d;
+}
+
+.modal-close:hover,
+.gchat-close:hover,
+.notif-close-btn:hover {
+  color: #cc0000;
+}
+
+.app.light-mode .modal-close,
+.app.light-mode .gchat-close,
+.app.light-mode .notif-close-btn {
+  color: #cc0000;
+}
+
+.app.light-mode .modal-close:hover,
+.app.light-mode .gchat-close:hover,
+.app.light-mode .notif-close-btn:hover {
+  color: #e60000;
+}
+
 
 .profile-edit-modal {
   max-width: 560px;
@@ -850,7 +858,6 @@ select:focus {
   justify-content: flex-end;
 }
 
-/* ── Friend / Group cards ── */
 .friend-card .card-header,
 .group-card .card-header {
   display: flex;
@@ -866,7 +873,6 @@ select:focus {
   margin-bottom: 0.2rem;
 }
 
-/* ── Member list (edit group) ── */
 .member-list {
   display: flex;
   flex-direction: column;
@@ -902,7 +908,6 @@ select:focus {
   border-left: 3px solid #ff922b;
 }
 
-/* ── Accept / Decline buttons ── */
 .accept-btn {
   background: #51cf66;
   color: #fff;
@@ -933,7 +938,6 @@ select:focus {
   background: #fa5252;
 }
 
-/* ── Paid-by & owes breakdown ── */
 .paid-by {
   color: #51cf66;
   font-size: 0.85rem;
@@ -953,7 +957,6 @@ select:focus {
   border-bottom: none;
 }
 
-/* ── Settle up ── */
 .owes-row {
   display: flex;
   align-items: center;
@@ -994,7 +997,6 @@ select:focus {
   margin-top: 0.3rem;
 }
 
-/* ── Light mode ── */
 .app.light-mode {
   background:
     radial-gradient(circle at 10% -20%, rgba(108, 92, 231, 0.16), transparent 42%),
@@ -3652,7 +3654,6 @@ select:focus {
 
 }
 
-/* Shared expense palette for every major section */
 .dashboard-breadcrumb,
 .dashboard-subtitle,
 .dashboard-stat-label,
@@ -3909,12 +3910,6 @@ select:focus {
   box-shadow: 0 14px 28px rgba(108, 92, 231, 0.12) !important;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   GROUP CHAT MODAL  — add these styles to App.css
-   (you can delete or keep the old .quick-chat-* rules — they won't conflict)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── Overlay ── */
 .gchat-overlay {
   position: fixed;
   inset: 0;
@@ -3927,7 +3922,6 @@ select:focus {
   backdrop-filter: blur(4px);
 }
 
-/* ── Modal shell ── */
 .gchat-modal {
   width: 100%;
   max-width: 560px;
@@ -3941,7 +3935,6 @@ select:focus {
   box-shadow: 0 28px 64px rgba(0, 0, 0, 0.6);
 }
 
-/* ── Header ── */
 .gchat-header {
   display: flex;
   align-items: center;
@@ -3965,20 +3958,22 @@ select:focus {
   border-radius: 8px;
   border: none;
   background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.5);
+  color: #ff6b6b;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.15s, color 0.15s;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .gchat-close:hover {
   background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  color: #ff4d4d;
 }
 
-/* ── Group selector row ── */
 .gchat-group-row {
   display: flex;
   align-items: center;
@@ -4028,7 +4023,6 @@ select:focus {
   background: #1e1e30;
 }
 
-/* ── Divider ── */
 .gchat-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.07);
@@ -4036,7 +4030,6 @@ select:focus {
   flex-shrink: 0;
 }
 
-/* ── Messages area ── */
 .gchat-messages {
   flex: 1;
   overflow-y: auto;
@@ -4073,7 +4066,6 @@ select:focus {
   text-align: center;
 }
 
-/* ── Message rows ── */
 .gchat-row {
   display: flex;
   gap: 0.65rem;
@@ -4088,7 +4080,6 @@ select:focus {
   flex-direction: row;
 }
 
-/* ── Avatar ── */
 .gchat-avatar {
   width: 36px;
   height: 36px;
@@ -4103,7 +4094,6 @@ select:focus {
   letter-spacing: 0.02em;
 }
 
-/* ── Bubble wrapper ── */
 .gchat-bubble-wrap {
   display: flex;
   flex-direction: column;
@@ -4123,7 +4113,6 @@ select:focus {
   font-family: 'DM Sans', sans-serif;
 }
 
-/* ── Bubbles ── */
 .gchat-bubble {
   padding: 0.65rem 0.9rem;
   border-radius: 14px;
@@ -4176,7 +4165,6 @@ select:focus {
   flex-shrink: 0;
 }
 
-/* ── Composer ── */
 .gchat-composer {
   display: flex;
   gap: 0.6rem;
@@ -4240,7 +4228,6 @@ select:focus {
   box-shadow: none;
 }
 
-/* ── Light mode ── */
 .app.light-mode .gchat-modal {
   background: #ffffff;
   border-color: rgba(108, 92, 231, 0.14);
@@ -4328,7 +4315,6 @@ select:focus {
   background: rgba(108, 92, 231, 0.04);
 }
 
-/* ── Responsive ── */
 @media (max-width: 600px) {
   .gchat-modal {
     max-height: 95vh;
@@ -4350,11 +4336,6 @@ select:focus {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   NOTIFICATIONS MODAL  — add to App.css
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* Overlay */
 .notif-overlay {
   position: fixed;
   inset: 0;
@@ -4367,7 +4348,6 @@ select:focus {
   backdrop-filter: blur(4px);
 }
 
-/* Modal */
 .notif-modal {
   width: 100%;
   max-width: 480px;
@@ -4382,7 +4362,6 @@ select:focus {
   font-family: 'DM Sans', sans-serif;
 }
 
-/* Header row */
 .notif-header {
   display: flex;
   align-items: center;
@@ -4413,18 +4392,17 @@ select:focus {
   height: 32px;
   border-radius: 9px;
   border: none;
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.5);
+  background: transparent;
+  color: #ff6b6b;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  transition: color 0.15s;
   flex-shrink: 0;
 }
-.notif-close-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.notif-close-btn:hover { color: #ff4d4d; }
 
-/* Tabs row */
 .notif-tabs-row {
   display: flex;
   align-items: center;
@@ -4465,7 +4443,6 @@ select:focus {
 }
 .notif-mark-read:hover { color: #a29bfe; }
 
-/* Section label */
 .notif-section-label {
   padding: 0.85rem 1.3rem 0.45rem;
   font-size: 0.7rem;
@@ -4476,7 +4453,6 @@ select:focus {
   flex-shrink: 0;
 }
 
-/* Scroll area */
 .notif-scroll {
   flex: 1;
   overflow-y: auto;
@@ -4490,7 +4466,6 @@ select:focus {
 .notif-scroll::-webkit-scrollbar-track { background: transparent; }
 .notif-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
-/* Notification item */
 .notif-item {
   display: flex;
   align-items: flex-start;
@@ -4505,7 +4480,6 @@ select:focus {
 .notif-item:hover { background: rgba(255,255,255,0.07); }
 .notif-item-unread { border-color: rgba(108,92,231,0.25); background: rgba(108,92,231,0.07); }
 
-/* Unread dot */
 .notif-unread-dot {
   width: 8px;
   height: 8px;
@@ -4521,7 +4495,6 @@ select:focus {
   margin-top: 6px;
 }
 
-/* Item icon */
 .notif-item-icon {
   width: 38px;
   height: 38px;
@@ -4534,13 +4507,11 @@ select:focus {
   flex-shrink: 0;
 }
 
-/* Item body */
 .notif-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.22rem; }
 .notif-item-title { font-size: 0.9rem; font-weight: 700; color: #fff; }
 .notif-item-msg { font-size: 0.82rem; color: rgba(255,255,255,0.65); line-height: 1.45; }
 .notif-item-time { font-size: 0.72rem; color: rgba(255,255,255,0.35); font-family: 'DM Mono', monospace; }
 
-/* Empty state */
 .notif-empty {
   display: flex;
   flex-direction: column;
@@ -4553,7 +4524,6 @@ select:focus {
   font-size: 0.86rem;
 }
 
-/* Loading */
 .notif-loading {
   padding: 2rem;
   text-align: center;
@@ -4561,7 +4531,6 @@ select:focus {
   font-size: 0.86rem;
 }
 
-/* Load more */
 .notif-load-more {
   display: flex;
   justify-content: center;
@@ -4580,7 +4549,6 @@ select:focus {
 }
 .notif-load-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
 
-/* Footer close button */
 .notif-footer {
   padding: 0.9rem 1rem;
   border-top: 1px solid rgba(255,255,255,0.07);
@@ -4601,15 +4569,14 @@ select:focus {
 }
 .notif-footer-close:hover { background: rgba(255,255,255,0.1); }
 
-/* ── Light mode ── */
 .app.light-mode .notif-modal {
   background: #ffffff;
   border-color: rgba(108,92,231,0.12);
   box-shadow: 0 24px 56px rgba(108,92,231,0.14);
 }
 .app.light-mode .notif-header-title { color: #1a1040; }
-.app.light-mode .notif-close-btn { background: rgba(108,92,231,0.07); color: rgba(47,32,80,0.55); }
-.app.light-mode .notif-close-btn:hover { background: rgba(108,92,231,0.14); color: #1a1040; }
+.app.light-mode .notif-close-btn { background: transparent; color: #e03e3e; }
+.app.light-mode .notif-close-btn:hover { color: #cc0000; }
 .app.light-mode .notif-tabs-row { border-color: rgba(108,92,231,0.1); }
 .app.light-mode .notif-tab { color: rgba(47,32,80,0.48); }
 .app.light-mode .notif-tab:hover { color: rgba(47,32,80,0.75); }
@@ -4640,12 +4607,6 @@ select:focus {
   .notif-overlay { align-items:flex-end; padding:0; }
 }
 
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   EXPENSE CHAT  (inside the expense dialog in ExpensesPage)
-   Replace existing .ep-chat-* rules with these
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .ep-chat-panel { display:flex; flex-direction:column; gap:0.6rem; }
 
 .ep-chat-messages {
@@ -4662,12 +4623,10 @@ select:focus {
 .ep-chat-messages::-webkit-scrollbar { width: 3px; }
 .ep-chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius:2px; }
 
-/* Row: other vs self */
 .ep-chat-row { display:flex; align-items:flex-end; gap:0.5rem; }
 .ep-chat-row-self { flex-direction:row-reverse; }
 .ep-chat-row-other { flex-direction:row; }
 
-/* Avatar */
 .ep-chat-avatar {
   width:28px; height:28px; border-radius:50%;
   display:flex; align-items:center; justify-content:center;
@@ -4675,7 +4634,6 @@ select:focus {
   flex-shrink:0;
 }
 
-/* Bubble wrapper */
 .ep-chat-bwrap { display:flex; flex-direction:column; gap:0.18rem; max-width:78%; }
 .ep-chat-row-self .ep-chat-bwrap { align-items:flex-end; }
 
@@ -4684,7 +4642,6 @@ select:focus {
   padding-left:0.1rem; font-family:'DM Sans',sans-serif;
 }
 
-/* Bubbles */
 .ep-chat-bubble {
   padding:0.5rem 0.75rem;
   border-radius:12px;
@@ -4712,7 +4669,6 @@ select:focus {
 .ep-chat-bubble-self .ep-chat-time { color:rgba(255,255,255,0.6); }
 .ep-chat-tick { color:rgba(255,255,255,0.55); flex-shrink:0; }
 
-/* Composer */
 .ep-chat-composer {
   display:flex; gap:0.5rem;
 }
@@ -4738,7 +4694,6 @@ select:focus {
 .ep-chat-composer button:hover:not(:disabled) { background:#5b4bd6; }
 .ep-chat-composer button:disabled { opacity:0.45; cursor:not-allowed; }
 
-/* Light mode expense chat */
 .app.light-mode .ep-chat-messages {
   background: #f9f7ff;
   border-color: rgba(108,92,231,0.1);
@@ -4753,4 +4708,3 @@ select:focus {
   background:#f3f0ff; border-color:rgba(108,92,231,0.16); color:#1a1040;
 }
 .app.light-mode .ep-chat-composer input::placeholder { color:rgba(47,32,80,0.28); }
-

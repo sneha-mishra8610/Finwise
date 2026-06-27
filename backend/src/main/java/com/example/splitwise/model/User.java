@@ -22,6 +22,7 @@ public class User {
     
     @JsonIgnore
     private String passwordHash;
+    private String googleId;
     private Set<String> friendIds = new HashSet<>();
     private Map<String, Double> budgetPreferences = new HashMap<>();
     private boolean emailNotificationsEnabled=true;
@@ -85,6 +86,14 @@ public class User {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public String getGoogleId() {
+        return googleId;
+    }
+
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
     }
 
     public Set<String> getFriendIds() {

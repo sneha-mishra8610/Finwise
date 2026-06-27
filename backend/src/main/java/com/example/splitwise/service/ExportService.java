@@ -125,7 +125,6 @@ public class ExportService {
         );
     }
 
-    /** Flat DTO passed to all renderers. */
     record ReportData(
             String userName, String userEmail, String today, String period,
             List<Expense> expenses,
@@ -358,7 +357,7 @@ public class ExportService {
 
     private void addBodyRowColored(PdfPTable t, Font f, BaseColor bg, String... values) {
         for (String v : values) {
-            if (v == null) continue; // caller handles null cells manually
+            if (v == null) continue;
             PdfPCell c = new PdfPCell(new Phrase(v, f));
             c.setBackgroundColor(bg);
             c.setPadding(5);
@@ -467,7 +466,7 @@ public class ExportService {
                     boolean settled = "SETTLED".equalsIgnoreCase(statusStr(e));
                     xlCell(dr, 5, statusStr(e), settled ? greenStyle : redStyle);
                 }
-                mr++; // blank row between months
+                mr++;
             }
 
             Sheet byGroupSheet = wb.createSheet("By Group");

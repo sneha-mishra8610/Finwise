@@ -2,7 +2,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 export type FriendsPageProps = Record<string, any>
 
-// Consistent avatar colors per initials
 const AVATAR_COLORS = [
   '#6c5ce7','#3b82f6','#d946b1','#34d399','#f59e0b',
   '#ef4444','#8b5cf6','#06b6d4','#10b981','#f97316',
@@ -69,7 +68,6 @@ export default function FriendsPage(props: FriendsPageProps) {
   const sym = getCurrencySymbol(defaultCurrency)
   const fmt = (n: number) => `${sym}${convertINR(Math.abs(n), defaultCurrency).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
-  // ── Workspace detail view ──
   if (friendDetailView) {
     const friend = users.find((u: any) => u.id === friendDetailView) || null
     const friendPairExpenses = expenseWorkspacePool
@@ -101,7 +99,6 @@ export default function FriendsPage(props: FriendsPageProps) {
     })
   }
 
-  // ── Total shared for a friend across all shared expenses ──
   function totalShared(friendId: string): number {
     return expenseWorkspacePool
       .filter((e: any) => {

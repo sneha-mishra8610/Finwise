@@ -107,19 +107,8 @@ export default function ExpensesPage(props: ExpensesPageProps) {
               <div className="ep-dialog-amount">{getCurrencySymbol(exp.currency)}{exp.amount.toFixed(2)}</div>
               <div className="ep-dialog-currency">{exp.currency}</div>
             </div>
-            {!isMine && (
-              <button
-                className={isFlagged ? 'ep-dialog-flag ep-dialog-flag-active' : 'ep-dialog-flag'}
-                onClick={toggleDialogFlag}
-                title={isFlagged ? 'Unflag expense' : 'Flag expense'}
-                aria-label={isFlagged ? 'Unflag expense' : 'Flag expense'}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill={isFlagged ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-              </button>
-            )}
-            <button className="ep-dialog-close" onClick={closeDialog}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+
+            <button className="ep-dialog-close" onClick={closeDialog}>✕</button>
           </div>
 
           {/* Meta grid */}
@@ -371,8 +360,8 @@ export default function ExpensesPage(props: ExpensesPageProps) {
         .ep-dialog-flag { width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,159,67,0.24); background:rgba(255,159,67,0.1); color:#ffb86b; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 0.15s,color 0.15s,border-color 0.15s; }
         .ep-dialog-flag:hover { background:rgba(255,159,67,0.18); color:#ffd19a; }
         .ep-dialog-flag-active { border-color:rgba(255,159,67,0.48); background:rgba(255,159,67,0.22); color:#ffd19a; }
-        .ep-dialog-close { width:30px; height:30px; border-radius:8px; border:none; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 0.15s; }
-        .ep-dialog-close:hover { background:rgba(255,255,255,0.12); color:#fff; }
+        .ep-dialog-close { width:30px; height:30px; border-radius:8px; border:none; background:transparent; color:#ff6b6b; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:color 0.15s; }
+        .ep-dialog-close:hover { color:#ff4d4d; }
 
         .ep-dialog-meta-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:0.75rem; }
         .ep-dialog-kv { padding:0.75rem 0.9rem; border-radius:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; gap:0.2rem; }
@@ -456,6 +445,8 @@ export default function ExpensesPage(props: ExpensesPageProps) {
         .app.light-mode .ep-btn-edit-sm { background:rgba(108,92,231,0.06); border-color:rgba(108,92,231,0.14); color:rgba(47,32,80,0.75); }
         .app.light-mode .ep-dialog,.app.light-mode .ep-modal { background:linear-gradient(180deg,#fff,#f7f4ff); border-color:rgba(108,92,231,0.14); }
         .app.light-mode .ep-dialog-title,.app.light-mode .ep-modal-head h2 { color:#1a1040; }
+        .app.light-mode .ep-dialog-close { background:transparent; color:#e03e3e; }
+        .app.light-mode .ep-dialog-close:hover { color:#cc0000; }
         .app.light-mode .ep-dialog-kv { background:rgba(108,92,231,0.04); border-color:rgba(108,92,231,0.08); }
         .app.light-mode .ep-dialog-kv-label { color:rgba(47,32,80,0.46); }
         .app.light-mode .ep-dialog-kv-val { color:#1a1040; }
@@ -489,13 +480,7 @@ export default function ExpensesPage(props: ExpensesPageProps) {
             {expenseStats.expenseCount} expenses logged
           </p>
         </div>
-        <div className="ep-hero-actions">
-          <button className="ep-btn-clear" onClick={() => setExpenseDetailView(null)}>Clear selection</button>
-          <button className="ep-btn-add" onClick={() => { resetExpenseForm(); setEditingExpense(null); setShowExpenseModalState(true) }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add expense
-          </button>
-        </div>
+
       </div>
 
       {/* Stats */}
@@ -624,12 +609,17 @@ export default function ExpensesPage(props: ExpensesPageProps) {
             })
           )}
         </div>
+        {/* Load More / Load All */}
+        <div className="ep-load-more">
+          <button className="ep-btn-load" onClick={() => setExpensesPage(expensesPage + 1)}>
+            Load more expenses
+          </button>
+          <button className="ep-btn-load" onClick={() => setExpensesPage(Math.ceil(filteredExpenseFeed.length / EXPENSES_PAGE_SIZE))}>
+            Load all expenses
+          </button>
+        </div>
 
-        {filteredExpenseFeed.length > expensesPage * EXPENSES_PAGE_SIZE && (
-          <div className="ep-load-more">
-            <button className="ep-btn-load" onClick={() => setExpensesPage(expensesPage + 1)}>Load more</button>
-          </div>
-        )}
+        
       </div>
 
       {/* Add/Edit Expense Modal */}
@@ -639,8 +629,7 @@ export default function ExpensesPage(props: ExpensesPageProps) {
             <div className="ep-modal-head">
               <h2>{editingExpense ? 'Edit Expense' : 'Add Expense'}</h2>
               <button className="ep-dialog-close" onClick={() => { setShowExpenseModalState(false); setEditingExpense(null); if (!editingExpense) resetExpenseForm() }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
+                ✕</button>
             </div>
             <form onSubmit={(e: React.FormEvent) => { props.handleSaveExpense(e); setShowExpenseModalState(false) }} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
               <div className="ep-field">

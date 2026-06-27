@@ -763,7 +763,6 @@ export default function ActivityPage(props: ActivityPageProps) {
             onClick={async () => {
               await fetchActivities(currentUserId, 0, false, true);
               setActivityPage(0);
-              setActivityHasMore(false);
             }}
           >
             Load all activities

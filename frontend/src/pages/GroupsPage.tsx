@@ -27,7 +27,6 @@ export default function GroupsPage(props: GroupsPageProps) {
     handleAcceptGroupInvitation,
     handleDeclineGroupInvitation,
     users,
-    setExpenseDetailView,
     resetExpenseForm,
     setEditingExpense,
     setIsGroupExpense,

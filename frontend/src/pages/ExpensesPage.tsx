@@ -277,195 +277,261 @@ export default function ExpensesPage(props: ExpensesPageProps) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap');
 
-        .ep-shell { font-family:'DM Sans',sans-serif; display:flex; flex-direction:column; gap:1.1rem; padding-bottom:2.5rem; }
+.ep-shell { font-family:'DM Sans',sans-serif; display:flex; flex-direction:column; gap:1.1rem; padding-bottom:2.5rem; }
 
-        /* ── Hero ── */
-        .ep-hero { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
-        .ep-eyebrow { margin:0 0 0.2rem; font-size:0.78rem; color:rgba(255,255,255,0.38); letter-spacing:0.04em; }
-        .ep-hero-title { margin:0 0 0.25rem; font-size:1.9rem; font-weight:700; color:#fff; letter-spacing:-0.02em; }
-        .ep-hero-sub { margin:0; font-size:0.84rem; color:rgba(255,255,255,0.42); display:flex; align-items:center; gap:0.4rem; }
-        .ep-hero-sub span { width:4px; height:4px; border-radius:50%; background:rgba(255,255,255,0.3); display:inline-block; }
-        .ep-hero-actions { display:flex; gap:0.6rem; align-items:center; flex-shrink:0; }
-        .ep-btn-clear { padding:0.52em 1.1em; border-radius:10px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.78); font-size:0.84rem; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.15s; }
-        .ep-btn-clear:hover { background:rgba(255,255,255,0.1); }
-        .ep-btn-add { display:flex; align-items:center; gap:0.45rem; padding:0.52em 1.2em; border-radius:10px; border:none; background:#6c5ce7; color:#fff; font-size:0.84rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; box-shadow:0 4px 14px rgba(108,92,231,0.38); transition:background 0.15s,transform 0.12s; }
-        .ep-btn-add:hover { background:#5b4bd6; transform:translateY(-1px); }
+/* ── Hero ── */
+.ep-hero { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.ep-eyebrow { margin:0 0 0.2rem; font-size:0.78rem; color:rgba(255,255,255,0.38); letter-spacing:0.04em; }
+.ep-hero-title { margin:0 0 0.25rem; font-size:1.9rem; font-weight:700; color:#fff; letter-spacing:-0.02em; }
+.ep-hero-sub { margin:0; font-size:0.84rem; color:rgba(255,255,255,0.42); display:flex; align-items:center; gap:0.4rem; }
+.ep-hero-sub span { width:4px; height:4px; border-radius:50%; background:rgba(255,255,255,0.3); display:inline-block; }
 
-        /* ── Stat strip ── */
-        .ep-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
-        .ep-stat { background:#1e1e30; border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:1.1rem 1.3rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:transform 0.18s,box-shadow 0.18s; }
-        .ep-stat:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,0.28); }
-        .ep-stat-body { display:flex; flex-direction:column; gap:0.3rem; }
-        .ep-stat-label { font-size:0.78rem; color:rgba(255,255,255,0.42); font-weight:500; }
-        .ep-stat-value { font-size:1.7rem; font-weight:700; font-family:'DM Mono',monospace; line-height:1.05; color:#fff; }
-        .ep-stat-value.red { color:#ff5c5c; }
-        .ep-stat-value.green { color:#2dcc8e; }
-        .ep-stat-note { font-size:0.75rem; color:rgba(255,255,255,0.35); }
-        .ep-stat-icon { width:46px; height:46px; border-radius:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+/* ── Stats ── */
+.ep-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
+.ep-stat { background:#1e1e30; border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:1.1rem 1.3rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:transform 0.18s,box-shadow 0.18s; }
+.ep-stat:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,0.28); }
+.ep-stat-body { display:flex; flex-direction:column; gap:0.3rem; }
+.ep-stat-label { font-size:0.78rem; color:rgba(255,255,255,0.42); font-weight:500; }
+.ep-stat-value { font-size:1.7rem; font-weight:700; font-family:'DM Mono',monospace; line-height:1.05; color:#fff; }
+.ep-stat-value.red { color:#ff5c5c; }
+.ep-stat-value.green { color:#2dcc8e; }
+.ep-stat-note { font-size:0.75rem; color:rgba(255,255,255,0.35); }
+.ep-stat-icon { width:46px; height:46px; border-radius:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 
-        /* ── Main card ── */
-        .ep-main-card { background:#1e1e30; border:1px solid rgba(255,255,255,0.07); border-radius:18px; overflow:hidden; }
+/* ── Main card ── */
+.ep-main-card { background:#1e1e30; border:1px solid rgba(255,255,255,0.07); border-radius:18px; overflow:hidden; }
+.ep-toolbar { padding:1rem 1.3rem 0.85rem; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.ep-toolbar-title { font-size:1rem; font-weight:700; color:#fff; margin:0 0 0.25rem; }
+.ep-toolbar-sub { font-size:0.78rem; color:rgba(255,255,255,0.38); margin:0; }
+.ep-filters { display:flex; gap:0.35rem; flex-wrap:wrap; align-items:center; }
+.ep-filter-chip { padding:0.36em 0.85em; border-radius:999px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.6); font-size:0.78rem; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.15s; white-space:nowrap; }
+.ep-filter-chip:hover { background:rgba(255,255,255,0.08); color:#fff; }
+.ep-filter-chip-active { background:rgba(108,92,231,0.2); border-color:rgba(108,92,231,0.5); color:#fff; }
 
-        /* Toolbar */
-        .ep-toolbar { padding:1rem 1.3rem 0.85rem; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
-        .ep-toolbar-left {}
-        .ep-toolbar-title { font-size:1rem; font-weight:700; color:#fff; margin:0 0 0.25rem; }
-        .ep-toolbar-sub { font-size:0.78rem; color:rgba(255,255,255,0.38); margin:0; }
-        .ep-filters { display:flex; gap:0.35rem; flex-wrap:wrap; align-items:center; }
-        .ep-filter-chip { padding:0.36em 0.85em; border-radius:999px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.6); font-size:0.78rem; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.15s; white-space:nowrap; }
-        .ep-filter-chip:hover { background:rgba(255,255,255,0.08); color:#fff; }
-        .ep-filter-chip-active { background:rgba(108,92,231,0.2); border-color:rgba(108,92,231,0.5); color:#fff; }
+/* ── Expense list ── */
+.ep-list { display:flex; flex-direction:column; }
+.ep-row { display:flex; align-items:center; gap:1rem; padding:0.85rem 1.3rem; border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer; transition:background 0.15s; }
+.ep-row:hover { background:rgba(255,255,255,0.025); }
+.ep-row:last-child { border-bottom:none; }
+.ep-row-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:0.82rem; font-weight:700; color:#fff; flex-shrink:0; }
+.ep-row-main { flex:1; min-width:0; }
+.ep-row-name { font-size:0.9rem; font-weight:600; color:#fff; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
+.ep-row-meta { font-size:0.75rem; color:rgba(255,255,255,0.38); margin-top:0.2rem; display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; }
+.ep-row-meta-dot { width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,0.25); }
+.ep-pill-flag { padding:0.15em 0.55em; border-radius:999px; background:rgba(255,159,67,0.16); color:#ffb86b; font-size:0.68rem; font-weight:700; }
+.ep-pill-recurring { padding:0.15em 0.55em; border-radius:999px; background:rgba(139,224,203,0.14); color:#8be0cb; font-size:0.68rem; font-weight:700; }
+.ep-row-right { display:flex; align-items:center; gap:0.75rem; flex-shrink:0; text-align:right; }
+.ep-row-amount { font-family:'DM Mono',monospace; font-weight:700; font-size:0.95rem; color:#fff; }
+.ep-row-amount-note { font-size:0.72rem; color:rgba(255,255,255,0.38); }
+.ep-row-amount-owe { color:#ff7a7a; font-size:0.75rem; font-weight:600; }
+.ep-row-amount-owed { color:#2dcc8e; font-size:0.75rem; font-weight:600; }
+.ep-btn-dots { width:30px; height:30px; border-radius:7px; border:none; background:transparent; color:rgba(255,255,255,0.35); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.ep-btn-dots:hover { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.7); }
 
-        /* Expense list */
-        .ep-list { display:flex; flex-direction:column; }
-        .ep-row { display:flex; align-items:center; gap:1rem; padding:0.85rem 1.3rem; border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer; transition:background 0.15s; }
-        .ep-row:hover { background:rgba(255,255,255,0.025); }
-        .ep-row:last-child { border-bottom:none; }
-        .ep-row-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:0.82rem; font-weight:700; color:#fff; flex-shrink:0; }
-        .ep-row-main { flex:1; min-width:0; }
-        .ep-row-name { font-size:0.9rem; font-weight:600; color:#fff; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
-        .ep-row-meta { font-size:0.75rem; color:rgba(255,255,255,0.38); margin-top:0.2rem; display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; }
-        .ep-row-meta-dot { width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,0.25); }
-        .ep-pill-flag { padding:0.15em 0.55em; border-radius:999px; background:rgba(255,159,67,0.16); color:#ffb86b; font-size:0.68rem; font-weight:700; }
-        .ep-pill-recurring { padding:0.15em 0.55em; border-radius:999px; background:rgba(139,224,203,0.14); color:#8be0cb; font-size:0.68rem; font-weight:700; }
-        .ep-row-right { display:flex; align-items:center; gap:0.75rem; flex-shrink:0; text-align:right; }
-        .ep-row-amount { font-family:'DM Mono',monospace; font-weight:700; font-size:0.95rem; color:#fff; }
-        .ep-row-amount-note { font-size:0.72rem; color:rgba(255,255,255,0.38); }
-        .ep-row-amount-owe { color:#ff7a7a; font-size:0.75rem; font-weight:600; }
-        .ep-row-amount-owed { color:#2dcc8e; font-size:0.75rem; font-weight:600; }
-        .ep-row-actions { display:flex; gap:0.35rem; align-items:center; }
-        .ep-btn-dots { width:30px; height:30px; border-radius:7px; border:none; background:transparent; color:rgba(255,255,255,0.35); cursor:pointer; display:flex; align-items:center; justify-content:center; }
-        .ep-btn-dots:hover { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.7); }
+/* ── Load more ── */
+.ep-load-more { display:flex; justify-content:flex-start; gap:0.5rem; padding:0.9rem 1.3rem; border-top:1px solid rgba(255,255,255,0.05); }
+.ep-btn-load { padding:0.48em 1.3em; border-radius:9px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.65); font-size:0.83rem; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.15s; }
+.ep-btn-load:hover { background:rgba(255,255,255,0.08); color:#fff; }
 
-        /* Load more */
-        .ep-load-more { display:flex; justify-content:flex-start; padding:0.9rem 1.3rem; border-top:1px solid rgba(255,255,255,0.05); }
-        .ep-btn-load { padding:0.48em 1.3em; border-radius:9px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.65); font-size:0.83rem; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.15s; }
-        .ep-btn-load:hover { background:rgba(255,255,255,0.08); color:#fff; }
+/* ── Empty ── */
+.ep-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.65rem; padding:3.5rem; text-align:center; }
+.ep-empty-icon { width:52px; height:52px; border-radius:50%; background:rgba(108,92,231,0.12); display:flex; align-items:center; justify-content:center; color:rgba(162,155,254,0.6); }
 
-        /* Empty */
-        .ep-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.65rem; padding:3.5rem; text-align:center; }
-        .ep-empty-icon { width:52px; height:52px; border-radius:50%; background:rgba(108,92,231,0.12); display:flex; align-items:center; justify-content:center; color:rgba(162,155,254,0.6); }
+/* ── Expense Dialog ── */
+.ep-dialog-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:500; padding:1rem; backdrop-filter:blur(4px); }
+.ep-dialog { background:linear-gradient(180deg,#1e1e30 0%,#18182a 100%); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:1.5rem; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,0.55); display:flex; flex-direction:column; gap:1.1rem; }
+.ep-dialog-header { display:flex; align-items:flex-start; gap:1rem; }
+.ep-dialog-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; flex-shrink:0; }
+.ep-dialog-title-block { flex:1; min-width:0; }
+.ep-dialog-eyebrow { font-size:0.72rem; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.06em; margin:0 0 0.2rem; }
+.ep-dialog-title { font-size:1.15rem; font-weight:700; color:#fff; margin:0; }
+.ep-dialog-amount-block { text-align:right; flex-shrink:0; }
+.ep-dialog-amount { font-size:1.4rem; font-weight:700; font-family:'DM Mono',monospace; color:#fff; }
+.ep-dialog-currency { font-size:0.72rem; color:rgba(255,255,255,0.38); }
+.ep-dialog-close { width:30px; height:30px; border-radius:8px; border:none; background:transparent; color:#ff6b6b; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.1rem; font-weight:700; line-height:1; transition:color 0.15s; }
+.ep-dialog-close:hover { color:#ff4d4d; }
+.ep-dialog-meta-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:0.75rem; }
+.ep-dialog-kv { padding:0.75rem 0.9rem; border-radius:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; gap:0.2rem; }
+.ep-dialog-kv-label { font-size:0.72rem; color:rgba(255,255,255,0.4); }
+.ep-dialog-kv-val { font-size:0.88rem; font-weight:600; color:#fff; }
+.ep-dialog-alert { padding:0.7rem 0.9rem; border-radius:12px; background:rgba(255,159,67,0.1); border:1px solid rgba(255,159,67,0.22); color:#ffb86b; font-size:0.82rem; display:flex; align-items:center; gap:0.55rem; }
+.ep-dialog-section { display:flex; flex-direction:column; gap:0.6rem; padding-top:0.9rem; border-top:1px solid rgba(255,255,255,0.06); }
+.ep-dialog-section-title { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:rgba(255,255,255,0.4); }
+.ep-dialog-split-info { display:flex; flex-direction:column; gap:0.3rem; }
+.ep-dialog-logs { display:flex; flex-direction:column; gap:0.45rem; }
+.ep-dialog-log-item { padding:0.65rem 0.8rem; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; gap:0.2rem; font-size:0.8rem; }
+.ep-dialog-log-item strong { color:rgba(255,255,255,0.75); }
+.ep-dialog-log-item span { color:rgba(255,255,255,0.42); }
+.ep-link-btn { background:none; border:none; color:#6c5ce7; font-size:0.8rem; font-weight:600; cursor:pointer; padding:0; font-family:'DM Sans',sans-serif; }
+.ep-dialog-actions { display:flex; gap:0.5rem; flex-wrap:wrap; padding-top:0.9rem; border-top:1px solid rgba(255,255,255,0.06); }
+.ep-action-btn { display:flex; align-items:center; gap:0.4rem; padding:0.52em 1.1em; border-radius:9px; font-size:0.82rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; border:none; transition:opacity 0.15s,transform 0.12s; }
+.ep-action-btn:hover { opacity:0.88; transform:translateY(-1px); }
+.ep-action-settle { background:#2dcc8e; color:#fff; }
+.ep-action-edit { background:rgba(108,92,231,0.18); color:#a29bfe; border:1px solid rgba(108,92,231,0.3) !important; }
+.ep-action-flag { background:rgba(255,159,67,0.15); color:#ffb86b; border:1px solid rgba(255,159,67,0.25) !important; }
+.ep-action-unflag { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.65); border:1px solid rgba(255,255,255,0.1) !important; }
+.ep-action-delete { background:rgba(255,92,92,0.12); color:#ff7a7a; border:1px solid rgba(255,92,92,0.22) !important; margin-left:auto; }
 
-        /* ── Dialog ── */
-        .ep-dialog-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:500; padding:1rem; backdrop-filter:blur(4px); }
-        .ep-dialog { background:linear-gradient(180deg,#1e1e30 0%,#18182a 100%); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:1.5rem; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,0.55); display:flex; flex-direction:column; gap:1.1rem; }
-        .ep-dialog-header { display:flex; align-items:flex-start; gap:1rem; }
-        .ep-dialog-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; flex-shrink:0; }
-        .ep-dialog-title-block { flex:1; min-width:0; }
-        .ep-dialog-eyebrow { font-size:0.72rem; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.06em; margin:0 0 0.2rem; }
-        .ep-dialog-title { font-size:1.15rem; font-weight:700; color:#fff; margin:0; }
-        .ep-dialog-amount-block { text-align:right; flex-shrink:0; }
-        .ep-dialog-amount { font-size:1.4rem; font-weight:700; font-family:'DM Mono',monospace; color:#fff; }
-        .ep-dialog-currency { font-size:0.72rem; color:rgba(255,255,255,0.38); }
-        .ep-dialog-flag { width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,159,67,0.24); background:rgba(255,159,67,0.1); color:#ffb86b; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 0.15s,color 0.15s,border-color 0.15s; }
-        .ep-dialog-flag:hover { background:rgba(255,159,67,0.18); color:#ffd19a; }
-        .ep-dialog-flag-active { border-color:rgba(255,159,67,0.48); background:rgba(255,159,67,0.22); color:#ffd19a; }
-        .ep-dialog-close { width:30px; height:30px; border-radius:8px; border:none; background:transparent; color:#ff6b6b; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:color 0.15s; }
-        .ep-dialog-close:hover { color:#ff4d4d; }
+/* ── Add/Edit Modal ── */
+.ep-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:600; padding:1rem; backdrop-filter:blur(4px); }
+.ep-modal { background:linear-gradient(180deg,#1e1e30,#18182a); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:1.5rem; width:100%; max-width:540px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,0.55); display:flex; flex-direction:column; gap:0; }
+.ep-modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+.ep-modal-head h2 { margin:0; font-size:1.2rem; font-weight:700; color:#fff; }
 
-        .ep-dialog-meta-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:0.75rem; }
-        .ep-dialog-kv { padding:0.75rem 0.9rem; border-radius:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; gap:0.2rem; }
-        .ep-dialog-kv-label { font-size:0.72rem; color:rgba(255,255,255,0.4); }
-        .ep-dialog-kv-val { font-size:0.88rem; font-weight:600; color:#fff; }
+/* Fields */
+.ep-field { display:flex; flex-direction:column; gap:0.35rem; }
+.ep-field label { font-size:0.78rem; color:rgba(255,255,255,0.52); font-weight:600; }
+.ep-modal input,.ep-modal select { width:100%; padding:0.65em 0.9em; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:#fff; font-size:0.88rem; font-family:'DM Sans',sans-serif; outline:none; box-sizing:border-box; transition:border-color 0.15s; }
+.ep-modal input:focus,.ep-modal select:focus { border-color:rgba(108,92,231,0.5); background:rgba(108,92,231,0.06); }
+.ep-modal select option { background:#1b1b2e; }
+.ep-row2 { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
 
-        .ep-dialog-alert { padding:0.7rem 0.9rem; border-radius:12px; background:rgba(255,159,67,0.1); border:1px solid rgba(255,159,67,0.22); color:#ffb86b; font-size:0.82rem; display:flex; align-items:center; gap:0.55rem; }
+/* Input with icon */
+.ep-input-icon-wrap { position:relative; }
+.ep-input-icon-wrap input,.ep-input-icon-wrap select { padding-left:2.2rem; }
+.ep-input-icon { position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); opacity:0.38; pointer-events:none; color:currentColor; }
+.ep-input-prefix { position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); font-size:0.9rem; color:rgba(255,255,255,0.55); pointer-events:none; z-index:1; }
 
-        .ep-dialog-section { display:flex; flex-direction:column; gap:0.6rem; padding-top:0.9rem; border-top:1px solid rgba(255,255,255,0.06); }
-        .ep-dialog-section-title { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:rgba(255,255,255,0.4); }
-        .ep-dialog-split-info { display:flex; flex-direction:column; gap:0.3rem; }
-        .ep-dialog-logs { display:flex; flex-direction:column; gap:0.45rem; }
-        .ep-dialog-log-item { padding:0.65rem 0.8rem; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; gap:0.2rem; font-size:0.8rem; }
-        .ep-dialog-log-item strong { color:rgba(255,255,255,0.75); }
-        .ep-dialog-log-item span { color:rgba(255,255,255,0.42); }
-        .ep-link-btn { background:none; border:none; color:#6c5ce7; font-size:0.8rem; font-weight:600; cursor:pointer; padding:0; font-family:'DM Sans',sans-serif; }
+/* Type toggle */
+.ep-type-toggle { display:flex; border:1px solid rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.03); }
+.ep-type-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.6em; border:none; background:transparent; color:rgba(255,255,255,0.5); font-size:0.82rem; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.15s; }
+.ep-type-btn:not(:last-child) { border-right:1px solid rgba(255,255,255,0.08); }
+.ep-type-btn-active { background:#6c5ce7; color:#fff; }
 
-        /* Chat in dialog */
-        .ep-chat-messages { max-height:180px; overflow-y:auto; background:rgba(12,12,24,0.5); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:0.75rem; display:flex; flex-direction:column; gap:0.55rem; }
-        .ep-chat-msg { display:flex; flex-direction:column; gap:0.1rem; }
-        .ep-chat-user { font-size:0.75rem; font-weight:700; color:rgba(255,255,255,0.65); }
-        .ep-chat-user-self { color:#8bd1ff; }
-        .ep-chat-text { font-size:0.83rem; color:rgba(255,255,255,0.8); }
-        .ep-chat-time { font-size:0.68rem; color:rgba(255,255,255,0.3); }
-        .ep-chat-composer { display:flex; gap:0.5rem; }
-        .ep-chat-composer input { flex:1; padding:0.55em 0.85em; border-radius:9px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:#fff; font-size:0.85rem; font-family:'DM Sans',sans-serif; outline:none; }
-        .ep-chat-composer input:focus { border-color:rgba(108,92,231,0.5); }
-        .ep-chat-composer button { padding:0.52em 1em; border-radius:9px; border:none; background:#6c5ce7; color:#fff; font-size:0.82rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
-        .ep-chat-composer button:disabled { opacity:0.45; cursor:not-allowed; }
+/* Split card */
+.ep-split-card { border:1px solid rgba(255,255,255,0.09); border-radius:14px; background:rgba(255,255,255,0.03); overflow:hidden; }
+.ep-split-card-head { display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1rem; }
+.ep-split-card-icon { width:36px; height:36px; border-radius:10px; background:rgba(108,92,231,0.2); color:#a29bfe; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ep-split-card-title { font-size:0.9rem; font-weight:700; color:#fff; }
+.ep-split-card-sub { font-size:0.74rem; color:rgba(255,255,255,0.42); margin-top:0.1rem; }
+.ep-split-method-row { display:flex; align-items:flex-end; gap:0.75rem; padding:0 1rem 0.85rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:0.85rem; }
+.ep-split-total { flex-shrink:0; text-align:right; }
+.ep-split-total-label { font-size:0.72rem; color:rgba(255,255,255,0.4); margin-bottom:0.2rem; }
+.ep-split-total-val { font-size:1rem; font-weight:700; color:#6c5ce7; font-family:'DM Mono',monospace; }
 
-        /* Dialog actions */
-        .ep-dialog-actions { display:flex; gap:0.5rem; flex-wrap:wrap; padding-top:0.9rem; border-top:1px solid rgba(255,255,255,0.06); }
-        .ep-action-btn { display:flex; align-items:center; gap:0.4rem; padding:0.52em 1.1em; border-radius:9px; font-size:0.82rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; border:none; transition:opacity 0.15s,transform 0.12s; }
-        .ep-action-btn:hover { opacity:0.88; transform:translateY(-1px); }
-        .ep-action-settle { background:#2dcc8e; color:#fff; }
-        .ep-action-edit { background:rgba(108,92,231,0.18); color:#a29bfe; border:1px solid rgba(108,92,231,0.3) !important; }
-        .ep-action-flag { background:rgba(255,159,67,0.15); color:#ffb86b; border:1px solid rgba(255,159,67,0.25) !important; }
-        .ep-action-unflag { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.65); border:1px solid rgba(255,255,255,0.1) !important; }
-        .ep-action-delete { background:rgba(255,92,92,0.12); color:#ff7a7a; border:1px solid rgba(255,92,92,0.22) !important; margin-left:auto; }
+/* Members */
+.ep-members-section { padding:0 1rem 0.9rem; display:flex; flex-direction:column; gap:0.55rem; }
+.ep-members-head { display:flex; align-items:center; justify-content:space-between; font-size:0.76rem; color:rgba(255,255,255,0.42); margin-bottom:0.2rem; }
+.ep-member-row { display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.85rem; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); }
+.ep-member-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:700; color:#fff; flex-shrink:0; }
+.ep-member-name { flex:1; font-size:0.86rem; font-weight:600; color:#fff; min-width:0; }
+.ep-member-amount-wrap { display:flex; align-items:center; gap:0.25rem; }
+.ep-member-currency { font-size:0.82rem; color:rgba(255,255,255,0.5); }
+.ep-member-amt-display { font-size:0.88rem; font-weight:600; font-family:'DM Mono',monospace; color:#fff; }
+.ep-member-input { width:80px !important; padding:0.35em 0.5em !important; text-align:right; flex:none !important; }
+.ep-member-pct { font-size:0.76rem; color:rgba(255,255,255,0.4); width:48px; text-align:right; flex-shrink:0; font-family:'DM Mono',monospace; }
+.ep-member-del { width:26px; height:26px; border-radius:7px; border:none; background:transparent; color:rgba(255,255,255,0.28); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 0.15s,color 0.15s; }
+.ep-member-del:hover { background:rgba(255,92,92,0.14); color:#ff7a7a; }
+.ep-add-member-btn { display:flex; align-items:center; justify-content:center; gap:0.4rem; width:100%; padding:0.55em; border-radius:9px; border:1px dashed rgba(108,92,231,0.3); background:rgba(108,92,231,0.05); color:#a29bfe; font-size:0.82rem; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.15s; }
+.ep-add-member-btn:hover { background:rgba(108,92,231,0.1); }
 
-        /* Add/Edit expense modal */
-        .ep-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:600; padding:1rem; backdrop-filter:blur(4px); }
-        .ep-modal { background:linear-gradient(180deg,#1e1e30,#18182a); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:1.5rem; width:100%; max-width:500px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,0.55); display:flex; flex-direction:column; gap:1rem; }
-        .ep-modal-head { display:flex; align-items:center; justify-content:space-between; }
-        .ep-modal-head h2 { margin:0; font-size:1.15rem; font-weight:700; color:#fff; }
-        .ep-modal input,.ep-modal select { width:100%; padding:0.6em 0.85em; border-radius:9px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:#fff; font-size:0.88rem; font-family:'DM Sans',sans-serif; outline:none; box-sizing:border-box; }
-        .ep-modal input:focus,.ep-modal select:focus { border-color:rgba(108,92,231,0.5); }
-        .ep-modal select option { background:#1b1b2e; }
-        .ep-modal label { font-size:0.78rem; color:rgba(255,255,255,0.52); font-weight:600; display:block; margin-bottom:0.3rem; }
-        .ep-modal .ep-field { display:flex; flex-direction:column; gap:0.3rem; }
-        .ep-modal .ep-row2 { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; }
-        .ep-modal .ep-radios { display:flex; gap:0.75rem; }
-        .ep-modal .ep-radio-label { display:flex; align-items:center; gap:0.4rem; font-size:0.83rem; color:rgba(255,255,255,0.72); cursor:pointer; }
-        .ep-modal .ep-checkbox-label { display:flex; align-items:center; gap:0.45rem; font-size:0.83rem; color:rgba(255,255,255,0.72); cursor:pointer; }
-        .ep-splits-box { background:rgba(12,12,24,0.5); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:0.8rem; display:flex; flex-direction:column; gap:0.5rem; }
-        .ep-splits-title { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.4); }
-        .ep-split-row { display:flex; align-items:center; gap:0.6rem; }
-        .ep-split-name { flex:1; font-size:0.82rem; color:rgba(255,255,255,0.78); }
-        .ep-split-row input { width:88px; flex:none; text-align:right; padding:0.35em 0.5em !important; }
-        .ep-splits-rem { text-align:center; font-size:0.76rem; font-weight:700; padding:0.35rem; border-radius:7px; margin-top:0.2rem; }
-        .ep-splits-ok { background:rgba(45,204,142,0.1); color:#2dcc8e; }
-        .ep-splits-off { background:rgba(255,92,92,0.1); color:#ff7a7a; }
-        .ep-modal-actions { display:flex; gap:0.5rem; }
-        .ep-modal-submit { flex:1; padding:0.65em; border-radius:10px; border:none; background:#6c5ce7; color:#fff; font-size:0.9rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
-        .ep-modal-cancel { padding:0.65em 1.1em; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:transparent; color:rgba(255,255,255,0.65); font-size:0.9rem; cursor:pointer; font-family:'DM Sans',sans-serif; }
+/* Toggle */
+.ep-toggle-wrap { cursor:pointer; flex-shrink:0; }
+.ep-toggle { width:44px; height:24px; border-radius:12px; background:rgba(255,255,255,0.12); position:relative; transition:background 0.2s; }
+.ep-toggle-on { background:#6c5ce7; }
+.ep-toggle-thumb { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform 0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.3); }
+.ep-toggle-on .ep-toggle-thumb { transform:translateX(20px); }
 
-        /* Light mode */
-        .app.light-mode .ep-hero-title { color:#1a1040; }
-        .app.light-mode .ep-eyebrow,.app.light-mode .ep-hero-sub { color:rgba(47,32,80,0.48); }
-        .app.light-mode .ep-stat,.app.light-mode .ep-main-card { background:#fff; border-color:rgba(108,92,231,0.1); box-shadow:0 2px 10px rgba(108,92,231,0.05); }
-        .app.light-mode .ep-stat-label,.app.light-mode .ep-stat-note { color:rgba(47,32,80,0.48); }
-        .app.light-mode .ep-stat-value { color:#1a1040; }
-        .app.light-mode .ep-toolbar-title,.app.light-mode .ep-row-name { color:#1a1040; }
-        .app.light-mode .ep-toolbar-sub,.app.light-mode .ep-row-meta,.app.light-mode .ep-row-amount-note { color:rgba(47,32,80,0.42); }
-        .app.light-mode .ep-row-amount { color:#1a1040; }
-        .app.light-mode .ep-filter-chip { background:rgba(108,92,231,0.06); border-color:rgba(108,92,231,0.12); color:rgba(47,32,80,0.65); }
-        .app.light-mode .ep-filter-chip-active { background:rgba(108,92,231,0.16); border-color:rgba(108,92,231,0.4); color:#1a1040; }
-        .app.light-mode .ep-row { border-color:rgba(108,92,231,0.06); }
-        .app.light-mode .ep-row:hover { background:rgba(108,92,231,0.03); }
-        .app.light-mode .ep-toolbar { border-color:rgba(108,92,231,0.08); }
-        .app.light-mode .ep-btn-edit-sm { background:rgba(108,92,231,0.06); border-color:rgba(108,92,231,0.14); color:rgba(47,32,80,0.75); }
-        .app.light-mode .ep-dialog,.app.light-mode .ep-modal { background:linear-gradient(180deg,#fff,#f7f4ff); border-color:rgba(108,92,231,0.14); }
-        .app.light-mode .ep-dialog-title,.app.light-mode .ep-modal-head h2 { color:#1a1040; }
-        .app.light-mode .ep-dialog-close { background:transparent; color:#e03e3e; }
-        .app.light-mode .ep-dialog-close:hover { color:#cc0000; }
-        .app.light-mode .ep-dialog-kv { background:rgba(108,92,231,0.04); border-color:rgba(108,92,231,0.08); }
-        .app.light-mode .ep-dialog-kv-label { color:rgba(47,32,80,0.46); }
-        .app.light-mode .ep-dialog-kv-val { color:#1a1040; }
-        .app.light-mode .ep-dialog-eyebrow { color:rgba(47,32,80,0.42); }
-        .app.light-mode .ep-dialog-section { border-color:rgba(108,92,231,0.08); }
-        .app.light-mode .ep-dialog-actions { border-color:rgba(108,92,231,0.08); }
-        .app.light-mode .ep-dialog-section-title { color:rgba(47,32,80,0.42); }
-        .app.light-mode .ep-chat-messages { background:rgba(108,92,231,0.03); border-color:rgba(108,92,231,0.1); }
-        .app.light-mode .ep-chat-text { color:rgba(47,32,80,0.8); }
-        .app.light-mode .ep-chat-user { color:rgba(47,32,80,0.65); }
-        .app.light-mode .ep-modal input,.app.light-mode .ep-modal select { background:rgba(108,92,231,0.05); border-color:rgba(108,92,231,0.15); color:#1a1040; }
-        .app.light-mode .ep-modal label { color:rgba(47,32,80,0.55); }
-        .app.light-mode .ep-modal .ep-radio-label,.app.light-mode .ep-modal .ep-checkbox-label { color:rgba(47,32,80,0.72); }
-        .app.light-mode .ep-load-more { border-color:rgba(108,92,231,0.06); }
-        .app.light-mode .ep-btn-load { color:#000; }
+/* Splits remaining */
+.ep-splits-rem { text-align:center; font-size:0.76rem; font-weight:700; padding:0.35rem; border-radius:7px; }
+.ep-splits-ok { background:rgba(45,204,142,0.1); color:#2dcc8e; }
+.ep-splits-off { background:rgba(255,92,92,0.1); color:#ff7a7a; }
 
-        @media(max-width:960px) { .ep-stats{grid-template-columns:1fr 1fr} .ep-row-right{flex-direction:column;align-items:flex-end;gap:0.3rem} }
-        @media(max-width:640px) { .ep-stats{grid-template-columns:1fr} .ep-hero{flex-direction:column} .ep-row-actions{display:none} .ep-dialog-meta-grid{grid-template-columns:1fr 1fr} }
-      `}</style>
+/* Recurring row */
+.ep-recurring-row { display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1rem; border:1px solid rgba(255,255,255,0.09); border-radius:14px; background:rgba(255,255,255,0.03); cursor:pointer; transition:background 0.15s; }
+.ep-recurring-row:hover { background:rgba(255,255,255,0.05); }
+.ep-recurring-icon { width:36px; height:36px; border-radius:10px; background:rgba(108,92,231,0.18); color:#a29bfe; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ep-recurring-title { font-size:0.88rem; font-weight:700; color:#fff; }
+.ep-recurring-sub { font-size:0.74rem; color:rgba(255,255,255,0.42); margin-top:0.1rem; }
+.ep-recurring-body { padding:0.85rem 1rem; border:1px solid rgba(255,255,255,0.09); border-top:none; border-radius:0 0 14px 14px; background:rgba(255,255,255,0.02); display:flex; flex-direction:column; gap:0.75rem; margin-top:-4px; }
+.ep-recurring-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; }
+.ep-recurring-next { display:flex; align-items:center; gap:0.45rem; font-size:0.78rem; color:rgba(255,255,255,0.5); padding:0.5rem 0.7rem; border-radius:8px; background:rgba(108,92,231,0.1); border:1px solid rgba(108,92,231,0.18); }
+
+/* Modal actions */
+.ep-modal-actions { display:flex; align-items:center; gap:0.6rem; margin-top:0.5rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.07); }
+.ep-recurring-checkbox { display:flex; align-items:center; gap:0.45rem; font-size:0.8rem; color:rgba(255,255,255,0.6); cursor:pointer; flex:1; }
+.ep-recurring-checkbox input { width:auto !important; accent-color:#6c5ce7; }
+.ep-modal-submit { padding:0.65em 1.5em; border-radius:10px; border:none; background:#6c5ce7; color:#fff; font-size:0.9rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; box-shadow:0 4px 14px rgba(108,92,231,0.38); transition:background 0.15s; white-space:nowrap; }
+.ep-modal-submit:hover { background:#5b4bd6; }
+.ep-modal-cancel { padding:0.65em 1.1em; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:transparent; color:rgba(255,255,255,0.65); font-size:0.9rem; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+
+/* Chat in dialog */
+.ep-chat-messages { max-height:180px; overflow-y:auto; background:rgba(12,12,24,0.5); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:0.75rem; display:flex; flex-direction:column; gap:0.55rem; }
+.ep-chat-row { display:flex; align-items:flex-end; gap:0.5rem; }
+.ep-chat-row-self { flex-direction:row-reverse; }
+.ep-chat-avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.62rem; font-weight:700; color:#fff; flex-shrink:0; }
+.ep-chat-bwrap { display:flex; flex-direction:column; gap:0.18rem; max-width:78%; }
+.ep-chat-row-self .ep-chat-bwrap { align-items:flex-end; }
+.ep-chat-sender { font-size:0.68rem; font-weight:700; color:#a29bfe; padding-left:0.1rem; }
+.ep-chat-bubble { padding:0.5rem 0.75rem; border-radius:12px; display:flex; flex-direction:column; gap:0.22rem; word-break:break-word; }
+.ep-chat-bubble-other { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.07); border-bottom-left-radius:3px; }
+.ep-chat-bubble-self { background:#6c5ce7; border-bottom-right-radius:3px; box-shadow:0 3px 10px rgba(108,92,231,0.35); }
+.ep-chat-text { font-size:0.82rem; line-height:1.45; color:#fff; }
+.ep-chat-meta { display:flex; align-items:center; gap:0.25rem; justify-content:flex-end; }
+.ep-chat-time { font-size:0.62rem; color:rgba(255,255,255,0.45); white-space:nowrap; }
+.ep-chat-tick { color:rgba(255,255,255,0.55); flex-shrink:0; }
+.ep-chat-composer { display:flex; gap:0.5rem; }
+.ep-chat-composer input { flex:1; padding:0.55em 0.85em; border-radius:9px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:#fff; font-size:0.85rem; outline:none; }
+.ep-chat-composer input:focus { border-color:rgba(108,92,231,0.5); }
+.ep-chat-composer button { padding:0.52em 1em; border-radius:9px; border:none; background:#6c5ce7; color:#fff; font-size:0.82rem; font-weight:700; cursor:pointer; }
+.ep-chat-composer button:disabled { opacity:0.45; cursor:not-allowed; }
+
+/* ── Light mode ── */
+.app.light-mode .ep-hero-title { color:#1a1040; }
+.app.light-mode .ep-eyebrow,.app.light-mode .ep-hero-sub { color:rgba(47,32,80,0.48); }
+.app.light-mode .ep-stat,.app.light-mode .ep-main-card { background:#fff; border-color:rgba(108,92,231,0.1); box-shadow:0 2px 10px rgba(108,92,231,0.05); }
+.app.light-mode .ep-stat-label,.app.light-mode .ep-stat-note { color:rgba(47,32,80,0.48); }
+.app.light-mode .ep-stat-value { color:#1a1040; }
+.app.light-mode .ep-toolbar-title,.app.light-mode .ep-row-name { color:#1a1040; }
+.app.light-mode .ep-toolbar-sub,.app.light-mode .ep-row-meta,.app.light-mode .ep-row-amount-note { color:rgba(47,32,80,0.42); }
+.app.light-mode .ep-row-amount { color:#1a1040; }
+.app.light-mode .ep-filter-chip { background:rgba(108,92,231,0.06); border-color:rgba(108,92,231,0.12); color:rgba(47,32,80,0.65); }
+.app.light-mode .ep-filter-chip-active { background:rgba(108,92,231,0.16); border-color:rgba(108,92,231,0.4); color:#1a1040; }
+.app.light-mode .ep-row { border-color:rgba(108,92,231,0.06); }
+.app.light-mode .ep-row:hover { background:rgba(108,92,231,0.03); }
+.app.light-mode .ep-toolbar { border-color:rgba(108,92,231,0.08); }
+.app.light-mode .ep-load-more { border-color:rgba(108,92,231,0.06); }
+.app.light-mode .ep-btn-load { color:#000; }
+.app.light-mode .ep-dialog,.app.light-mode .ep-modal { background:linear-gradient(180deg,#fff,#f7f4ff); border-color:rgba(108,92,231,0.14); }
+.app.light-mode .ep-modal-head h2,.app.light-mode .ep-dialog-title { color:#1a1040; }
+.app.light-mode .ep-dialog-close { color:#e03e3e; }
+.app.light-mode .ep-dialog-kv { background:rgba(108,92,231,0.04); border-color:rgba(108,92,231,0.08); }
+.app.light-mode .ep-dialog-kv-label,.app.light-mode .ep-dialog-eyebrow { color:rgba(47,32,80,0.46); }
+.app.light-mode .ep-dialog-kv-val { color:#1a1040; }
+.app.light-mode .ep-dialog-section,.app.light-mode .ep-dialog-actions { border-color:rgba(108,92,231,0.08); }
+.app.light-mode .ep-dialog-section-title { color:rgba(47,32,80,0.42); }
+.app.light-mode .ep-field label { color:rgba(47,32,80,0.55); }
+.app.light-mode .ep-modal input,.app.light-mode .ep-modal select { background:rgba(108,92,231,0.05); border-color:rgba(108,92,231,0.15); color:#1a1040; }
+.app.light-mode .ep-type-toggle { border-color:rgba(108,92,231,0.15); background:rgba(108,92,231,0.04); }
+.app.light-mode .ep-type-btn { color:rgba(47,32,80,0.55); }
+.app.light-mode .ep-type-btn:not(:last-child) { border-color:rgba(108,92,231,0.1); }
+.app.light-mode .ep-type-btn-active { background:#6c5ce7; color:#fff; }
+.app.light-mode .ep-split-card { background:rgba(108,92,231,0.03); border-color:rgba(108,92,231,0.12); }
+.app.light-mode .ep-split-card-head { border-color:rgba(108,92,231,0.08); }
+.app.light-mode .ep-split-method-row { border-color:rgba(108,92,231,0.08); }
+.app.light-mode .ep-split-card-title { color:#1a1040; }
+.app.light-mode .ep-split-card-sub,.app.light-mode .ep-members-head,.app.light-mode .ep-member-pct,.app.light-mode .ep-split-total-label { color:rgba(47,32,80,0.48); }
+.app.light-mode .ep-member-row { background:rgba(108,92,231,0.04); border-color:rgba(108,92,231,0.1); }
+.app.light-mode .ep-member-name { color:#1a1040; }
+.app.light-mode .ep-member-amt-display { color:#1a1040; }
+.app.light-mode .ep-member-currency { color:rgba(47,32,80,0.5); }
+.app.light-mode .ep-add-member-btn { color:#6c5ce7; border-color:rgba(108,92,231,0.25); background:rgba(108,92,231,0.04); }
+.app.light-mode .ep-recurring-row { background:rgba(108,92,231,0.03); border-color:rgba(108,92,231,0.12); }
+.app.light-mode .ep-recurring-title { color:#1a1040; }
+.app.light-mode .ep-recurring-sub,.app.light-mode .ep-recurring-next { color:rgba(47,32,80,0.5); }
+.app.light-mode .ep-recurring-body { background:rgba(108,92,231,0.02); border-color:rgba(108,92,231,0.1); }
+.app.light-mode .ep-recurring-next { background:rgba(108,92,231,0.07); border-color:rgba(108,92,231,0.15); }
+.app.light-mode .ep-modal-actions { border-color:rgba(108,92,231,0.08); }
+.app.light-mode .ep-recurring-checkbox { color:rgba(47,32,80,0.65); }
+.app.light-mode .ep-modal-cancel { color:rgba(47,32,80,0.65); border-color:rgba(108,92,231,0.15); }
+.app.light-mode .ep-chat-messages { background:rgba(108,92,231,0.03); border-color:rgba(108,92,231,0.1); }
+.app.light-mode .ep-chat-text { color:#1a1040; }
+.app.light-mode .ep-chat-bubble-other { background:#fff; border-color:rgba(108,92,231,0.12); }
+.app.light-mode .ep-chat-bubble-other .ep-chat-text { color:#1a1040; }
+.app.light-mode .ep-chat-sender { color:#6c5ce7; }
+
+@media(max-width:960px) { .ep-stats{grid-template-columns:1fr 1fr} }
+@media(max-width:640px) { .ep-stats{grid-template-columns:1fr} .ep-hero{flex-direction:column} .ep-row-actions{display:none} .ep-dialog-meta-grid{grid-template-columns:1fr 1fr} .ep-row2{grid-template-columns:1fr} .ep-recurring-grid{grid-template-columns:1fr} }`}</style>
 
       {/* Dialog */}
       {dialogExpense && ExpenseDialog({ exp: dialogExpense })}
@@ -624,173 +690,326 @@ export default function ExpensesPage(props: ExpensesPageProps) {
 
       {/* Add/Edit Expense Modal */}
       {showExpenseModal && (
-        <div className="ep-modal-overlay" onClick={() => { setShowExpenseModalState(false); setEditingExpense(null); if (!editingExpense) resetExpenseForm() }}>
-          <div className="ep-modal" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-            <div className="ep-modal-head">
-              <h2>{editingExpense ? 'Edit Expense' : 'Add Expense'}</h2>
-              <button className="ep-dialog-close" onClick={() => { setShowExpenseModalState(false); setEditingExpense(null); if (!editingExpense) resetExpenseForm() }}>
-                ✕</button>
+  <div className="ep-modal-overlay" onClick={() => { setShowExpenseModalState(false); setEditingExpense(null); if (!editingExpense) resetExpenseForm() }}>
+    <div className="ep-modal" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+      
+      {/* Header */}
+      <div className="ep-modal-head">
+        <h2>{editingExpense ? 'Edit Expense' : 'Add Expense'}</h2>
+        <button className="ep-dialog-close" onClick={() => { setShowExpenseModalState(false); setEditingExpense(null); if (!editingExpense) resetExpenseForm() }}>✕</button>
+      </div>
+
+      <form onSubmit={(e: React.FormEvent) => { props.handleSaveExpense(e); setShowExpenseModalState(false) }} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+
+        {/* Description */}
+        <div className="ep-field">
+          <label>Description</label>
+          <div className="ep-input-icon-wrap">
+            <svg className="ep-input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <input type="text" placeholder="e.g. Dinner at restaurant" value={expenseDescription}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)} required />
+          </div>
+        </div>
+
+        {/* Amount + Currency */}
+        <div className="ep-row2">
+          <div className="ep-field">
+            <label>Amount</label>
+            <div className="ep-input-icon-wrap">
+              <span className="ep-input-prefix">{sym}</span>
+              <input type="number" min="0" step="0.01" placeholder="0.00" value={expenseAmount}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)}
+                required style={{ paddingLeft: '1.8rem' }} />
             </div>
-            <form onSubmit={(e: React.FormEvent) => { props.handleSaveExpense(e); setShowExpenseModalState(false) }} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+          </div>
+          <div className="ep-field">
+            <label>Currency</label>
+            <select value={expenseCurrency} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExpenseCurrency(e.target.value)}>
+              <option value="INR">INR ₹</option>
+              <option value="USD">USD $</option>
+              <option value="EUR">EUR €</option>
+              <option value="GBP">GBP £</option>
+              <option value="JPY">JPY ¥</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Category */}
+        <div className="ep-field">
+          <label>Category</label>
+          <div className="ep-input-icon-wrap">
+            <svg className="ep-input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <select value={expenseTag} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExpenseTag(e.target.value)}
+              style={{ paddingLeft: '2.2rem' }}>
+              {['groceries','rent','transport','travel','insurance','investments','utilities','subscriptions','health','education','childcare','pets','taxes','gifts','charity','maintenance','loans','fees','entertainment','shopping','miscellaneous'].map(c =>
+                <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Type */}
+        <div className="ep-field">
+          <label>Type</label>
+          <div className="ep-type-toggle">
+            {[
+              { key: 'personal', label: 'Personal', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },
+              { key: 'friend', label: 'Friend', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+              { key: 'group', label: 'Group', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+            ].map(({ key, label, icon }) => {
+              const active = key === 'personal' ? (!isGroupExpense && !isFriendExpense) : key === 'friend' ? (isFriendExpense && !isGroupExpense) : isGroupExpense
+              return (
+                <button key={key} type="button"
+                  className={active ? 'ep-type-btn ep-type-btn-active' : 'ep-type-btn'}
+                  onClick={() => {
+                    if (key === 'personal') { setIsGroupExpense(false); setIsFriendExpense(false) }
+                    else if (key === 'friend') { setIsFriendExpense(true); setIsGroupExpense(false) }
+                    else { setIsGroupExpense(true); setIsFriendExpense(false) }
+                  }}>
+                  {icon}{label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Friend selector */}
+        {isFriendExpense && !isGroupExpense && (
+          <div className="ep-row2">
+            <div className="ep-field">
+              <label>Friend</label>
+              <select value={selectedFriendId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedFriendId(e.target.value)} required>
+                <option value="">Choose friend</option>
+                {currentFriends.map((f: any) => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </div>
+            {selectedFriendId && (
               <div className="ep-field">
-                <label>Description</label>
-                <input type="text" placeholder="e.g. Dinner at restaurant" value={expenseDescription} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseDescription(e.target.value)} required />
+                <label>Paid by</label>
+                <select value={expensePayerId || currentUserId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExpensePayerId(e.target.value)}>
+                  <option value={currentUserId}>{currentUser?.name || 'You'}</option>
+                  <option value={selectedFriendId}>{users.find((u: any) => u.id === selectedFriendId)?.name || 'Friend'}</option>
+                </select>
               </div>
-              <div className="ep-row2">
-                <div className="ep-field">
-                  <label>Amount</label>
-                  <input type="number" min="0" step="0.01" placeholder="0.00" value={expenseAmount} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpenseAmount(e.target.value)} required />
-                </div>
-                <div className="ep-field">
-                  <label>Currency</label>
-                  <select value={expenseCurrency} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExpenseCurrency(e.target.value)}>
-                    <option value="INR">INR ₹</option>
-                    <option value="USD">USD $</option>
-                    <option value="EUR">EUR €</option>
-                    <option value="GBP">GBP £</option>
-                    <option value="JPY">JPY ¥</option>
-                  </select>
-                </div>
-              </div>
+            )}
+          </div>
+        )}
+
+        {/* Group selector */}
+        {isGroupExpense && (
+          <div className="ep-row2">
+            <div className="ep-field">
+              <label>Group</label>
+              <select value={selectedGroupId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedGroupId(e.target.value)} required>
+                <option value="">Select group</option>
+                {filteredGroups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+            </div>
+            {selectedGroupId && (
               <div className="ep-field">
-                <label>Category</label>
-                <select value={expenseTag} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExpenseTag(e.target.value)}>
-                  {['groceries','rent','transport','travel','insurance','investments','utilities','subscriptions','health','education','childcare','pets','taxes','gifts','charity','maintenance','loans','fees','entertainment','shopping','miscellaneous'].map(c => <option key={c} value={c}>{c}</option>)}
+                <label>Paid by</label>
+                <select value={expensePayerId || currentUserId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExpensePayerId(e.target.value)}>
+                  {(props.groups?.find((g: any) => g.id === selectedGroupId)?.memberIds || []).map((mid: string) => {
+                    const m = users.find((u: any) => u.id === mid)
+                    return <option key={mid} value={mid}>{m?.name || mid}{mid === currentUserId ? ' (You)' : ''}</option>
+                  })}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Split with group card */}
+        {(isGroupExpense || isFriendExpense) && (
+          <div className="ep-split-card">
+            {/* Split card header */}
+            <div className="ep-split-card-head">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div className="ep-split-card-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div>
+                  <div className="ep-split-card-title">Split with group</div>
+                  <div className="ep-split-card-sub">Set how this expense is divided</div>
+                </div>
+              </div>
+              <div className="ep-toggle-wrap" onClick={() => setSplitMode(splitMode === 'equal' ? 'unequal' : 'equal')}>
+                <div className={`ep-toggle ${splitMode !== 'equal' ? 'ep-toggle-on' : ''}`}>
+                  <div className="ep-toggle-thumb" />
+                </div>
+              </div>
+            </div>
+
+            {/* Split method + total */}
+            <div className="ep-split-method-row">
+              <div className="ep-field" style={{ flex: 1 }}>
+                <label>Split method</label>
+                <select value={splitMode} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setSplitMode(e.target.value); setCustomSplits({}) }}>
+                  <option value="equal">Equal split</option>
+                  <option value="unequal">Unequal amounts</option>
+                  <option value="percentage">By percentage</option>
+                </select>
+              </div>
+              <div className="ep-split-total">
+                <div className="ep-split-total-label">Total</div>
+                <div className="ep-split-total-val">{sym}{parseFloat(expenseAmount || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              </div>
+            </div>
+
+            {/* Members list */}
+            <div className="ep-members-section">
+              <div className="ep-members-head">
+                <span>Group members</span>
+                <span>{(isGroupExpense ? (props.groups?.find((g: any) => g.id === selectedGroupId)?.memberIds || []) : [currentUserId, selectedFriendId].filter(Boolean)).length} members</span>
+              </div>
+
+              {(isGroupExpense
+                ? (props.groups?.find((g: any) => g.id === selectedGroupId)?.memberIds || [])
+                : [currentUserId, selectedFriendId].filter(Boolean)
+              ).map((mid: string) => {
+                const m = users.find((u: any) => u.id === mid)
+                const name = mid === currentUserId ? (currentUser?.name || 'You') : m?.name || mid
+                const initials = name.split(' ').filter(Boolean).slice(0, 1).map((p: string) => p[0]?.toUpperCase()).join('')
+                const avatarColors = ['#e74c3c','#e67e22','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#ff5722']
+                const colorIdx = name.split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), 0) % avatarColors.length
+                const total = parseFloat(expenseAmount || '0')
+                const memberCount = (isGroupExpense ? (props.groups?.find((g: any) => g.id === selectedGroupId)?.memberIds || []) : [currentUserId, selectedFriendId].filter(Boolean)).length
+                const equalAmt = memberCount > 0 ? total / memberCount : 0
+                const customVal = parseFloat(customSplits[mid] || '0')
+                const displayAmt = splitMode === 'equal' ? equalAmt : customVal
+                const pct = total > 0 ? (displayAmt / total) * 100 : 0
+
+                return (
+                  <div key={mid} className="ep-member-row">
+                    <div className="ep-member-avatar" style={{ background: avatarColors[colorIdx] }}>
+                      {initials}
+                    </div>
+                    <span className="ep-member-name">{name}</span>
+                    <div className="ep-member-amount-wrap">
+                      <span className="ep-member-currency">{sym}</span>
+                      {splitMode === 'equal' ? (
+                        <span className="ep-member-amt-display">{equalAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      ) : (
+                        <input
+                          type="number" min="0" step="0.01" placeholder="0.00"
+                          value={customSplits[mid] || ''}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomSplits((p: any) => ({ ...p, [mid]: e.target.value }))}
+                          className="ep-member-input"
+                        />
+                      )}
+                    </div>
+                    <span className="ep-member-pct">{pct.toFixed(2)}%</span>
+                    <button type="button" className="ep-member-del">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    </button>
+                  </div>
+                )
+              })}
+
+              {splitMode !== 'equal' && (
+                <div className={`ep-splits-rem ${props.remainingAmount() === 0 ? 'ep-splits-ok' : 'ep-splits-off'}`} style={{ margin: '0.25rem 0' }}>
+                  {props.remainingAmount() === 0 ? '✓ Balanced' : `${sym}${Math.abs(props.remainingAmount()).toFixed(2)} ${props.remainingAmount() > 0 ? 'remaining' : 'over'}`}
+                </div>
+              )}
+
+              <button type="button" className="ep-add-member-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add member
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Recurring expense — collapsed row */}
+        <div className="ep-recurring-row" onClick={() => setIsRecurringExpense(!isRecurringExpense)}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div className="ep-recurring-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </div>
+            <div>
+              <div className="ep-recurring-title">Recurring expense</div>
+              <div className="ep-recurring-sub">Set this expense to repeat automatically</div>
+            </div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4, transform: isRecurringExpense ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+
+        {isRecurringExpense && (
+          <div className="ep-recurring-body">
+            <div className="ep-recurring-grid">
+              <div className="ep-field">
+                <label>Repeat</label>
+                <select value={recurrenceType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setRecurrenceType(e.target.value as any); if (e.target.value !== 'CUSTOM') setRecurrenceInterval('1') }}>
+                  <option value="DAILY">Daily</option>
+                  <option value="WEEKLY">Weekly</option>
+                  <option value="MONTHLY">Monthly</option>
+                  <option value="YEARLY">Yearly</option>
+                  <option value="CUSTOM">Custom</option>
                 </select>
               </div>
               <div className="ep-field">
-                <label>Type</label>
-                <div className="ep-radios">
-                  <label className="ep-radio-label"><input type="radio" name="expType" checked={!isGroupExpense && !isFriendExpense} onChange={() => { setIsGroupExpense(false); setIsFriendExpense(false) }} /> Personal</label>
-                  <label className="ep-radio-label"><input type="radio" name="expType" checked={isFriendExpense && !isGroupExpense} onChange={() => { setIsFriendExpense(true); setIsGroupExpense(false) }} /> Friend</label>
-                  <label className="ep-radio-label"><input type="radio" name="expType" checked={isGroupExpense} onChange={() => { setIsGroupExpense(true); setIsFriendExpense(false) }} /> Group</label>
+                <label>Every</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <input type="number" min="1" value={recurrenceInterval}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecurrenceInterval(e.target.value)}
+                    style={{ width: '60px', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.82rem', opacity: 0.5, whiteSpace: 'nowrap' }}>
+                    {recurrenceType === 'DAILY' ? 'day' : recurrenceType === 'WEEKLY' ? 'week' : recurrenceType === 'MONTHLY' ? 'month' : recurrenceType === 'YEARLY' ? 'year' : 'days'}
+                  </span>
                 </div>
               </div>
-              {isFriendExpense && !isGroupExpense && (
-                <div className="ep-row2">
-                  <div className="ep-field">
-                    <label>Friend</label>
-                    <select value={selectedFriendId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedFriendId(e.target.value)} required>
-                      <option value="">Choose friend</option>
-                      {currentFriends.map((f: any) => <option key={f.id} value={f.id}>{f.name}</option>)}
-                    </select>
-                  </div>
-                  {selectedFriendId && (
-                    <div className="ep-field">
-                      <label>Paid by</label>
-                      <select value={expensePayerId || currentUserId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExpensePayerId(e.target.value)}>
-                        <option value={currentUserId}>{currentUser?.name || 'You'}</option>
-                        <option value={selectedFriendId}>{users.find((u: any) => u.id === selectedFriendId)?.name || 'Friend'}</option>
-                      </select>
-                    </div>
-                  )}
-                </div>
-              )}
-              {isGroupExpense && (
-                <div className="ep-row2">
-                  <div className="ep-field">
-                    <label>Group</label>
-                    <select value={selectedGroupId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedGroupId(e.target.value)} required>
-                      <option value="">Select group</option>
-                      {filteredGroups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
-                    </select>
-                  </div>
-                  {selectedGroupId && (
-                    <div className="ep-field">
-                      <label>Paid by</label>
-                      <select value={expensePayerId || currentUserId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExpensePayerId(e.target.value)}>
-                        {(props.groups?.find((g: any) => g.id === selectedGroupId)?.memberIds || []).map((mid: string) => {
-                          const m = users.find((u: any) => u.id === mid)
-                          return <option key={mid} value={mid}>{m?.name || mid}{mid === currentUserId ? ' (You)' : ''}</option>
-                        })}
-                      </select>
-                    </div>
-                  )}
-                </div>
-              )}
-              {(isGroupExpense || isFriendExpense) && (
-                <div className="ep-field">
-                  <label>Split method</label>
-                  <select value={splitMode} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setSplitMode(e.target.value); setCustomSplits({}) }}>
-                    <option value="equal">Equal split</option>
-                    <option value="unequal">Unequal amounts</option>
-                    <option value="percentage">By percentage</option>
-                  </select>
-                </div>
-              )}
-              {splitMode !== 'equal' && (isGroupExpense || isFriendExpense) && (
-                <div className="ep-splits-box">
-                  <div className="ep-splits-title">{splitMode === 'percentage' ? 'Enter percentages' : 'Enter amounts'}</div>
-                  {(isGroupExpense
-                    ? (props.groups?.find((g: any) => g.id === selectedGroupId)?.memberIds || [])
-                    : [currentUserId, selectedFriendId]
-                  ).filter(Boolean).map((mid: string) => {
-                    const m = users.find((u: any) => u.id === mid)
-                    return (
-                      <div key={mid} className="ep-split-row">
-                        <span className="ep-split-name">{mid === currentUserId ? 'You' : m?.name || mid}</span>
-                        <input type="number" min="0" step="0.01" placeholder="0" value={customSplits[mid] || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomSplits((p: any) => ({ ...p, [mid]: e.target.value }))} />
-                        <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', width: 16 }}>{splitMode === 'percentage' ? '%' : sym}</span>
-                      </div>
-                    )
-                  })}
-                  <div className={`ep-splits-rem ${(splitMode === 'percentage' ? props.remainingPercentage() : props.remainingAmount()) === 0 ? 'ep-splits-ok' : 'ep-splits-off'}`}>
-                    {splitMode === 'percentage'
-                      ? props.remainingPercentage() === 0 ? '✓ 100%' : `${props.remainingPercentage().toFixed(1)}% remaining`
-                      : props.remainingAmount() === 0 ? '✓ Balanced' : `${sym}${Math.abs(props.remainingAmount()).toFixed(2)} ${props.remainingAmount() > 0 ? 'remaining' : 'over'}`}
-                  </div>
-                </div>
-              )}
               <div className="ep-field">
-                <label className="ep-checkbox-label">
-                  <input type="checkbox" checked={isRecurringExpense} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsRecurringExpense(e.target.checked)} />
-                  Recurring expense
-                </label>
+                <label>Start date</label>
+                <input type="date" value={recurrenceStartDate}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecurrenceStartDate(e.target.value)}
+                  required={isRecurringExpense} />
               </div>
-              {isRecurringExpense && (
-                <>
-                  <div className="ep-row2">
-                    <div className="ep-field">
-                      <label>Start date</label>
-                      <input type="date" value={recurrenceStartDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecurrenceStartDate(e.target.value)} required={isRecurringExpense} />
-                    </div>
-                    <div className="ep-field">
-                      <label>Frequency</label>
-                      <select value={recurrenceType} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setRecurrenceType(e.target.value as any); if (e.target.value !== 'CUSTOM') setRecurrenceInterval('1') }}>
-                        <option value="DAILY">Daily</option>
-                        <option value="WEEKLY">Weekly</option>
-                        <option value="MONTHLY">Monthly</option>
-                        <option value="YEARLY">Yearly</option>
-                        <option value="CUSTOM">Custom</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="ep-row2">
-                    {recurrenceType === 'CUSTOM' && (
-                      <div className="ep-field">
-                        <label>Every N days</label>
-                        <input type="number" min="1" value={recurrenceInterval} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecurrenceInterval(e.target.value)} />
-                      </div>
-                    )}
-                    <div className="ep-field">
-                      <label>End date (optional)</label>
-                      <input type="date" value={recurrenceEndDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecurrenceEndDate(e.target.value)} />
-                    </div>
-                  </div>
-                </>
-              )}
               <div className="ep-field">
-                <label>Bill image URL (optional)</label>
-                <input type="url" placeholder="https://..." value={props.expenseImageUrl || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => props.setExpenseImageUrl(e.target.value)} />
+                <label>End date (optional)</label>
+                <input type="date" value={recurrenceEndDate}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecurrenceEndDate(e.target.value)} />
               </div>
-              <div className="ep-modal-actions">
-                <button type="submit" className="ep-modal-submit">{editingExpense ? 'Update expense' : 'Add expense'}</button>
-                <button type="button" className="ep-modal-cancel" onClick={() => { setShowExpenseModalState(false); setEditingExpense(null); resetExpenseForm() }}>Cancel</button>
+            </div>
+            {recurrenceStartDate && (
+              <div className="ep-recurring-next">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Next on: {(() => {
+                  try {
+                    const d = new Date(recurrenceStartDate)
+                    const days = recurrenceType === 'DAILY' ? Number(recurrenceInterval) : recurrenceType === 'WEEKLY' ? Number(recurrenceInterval) * 7 : recurrenceType === 'MONTHLY' ? 30 : 365
+                    d.setDate(d.getDate() + days)
+                    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+                  } catch { return '—' }
+                })()}
               </div>
-            </form>
+            )}
+          </div>
+        )}
+
+        {/* Bill image URL */}
+        <div className="ep-field">
+          <label>Bill image URL (optional)</label>
+          <div className="ep-input-icon-wrap">
+            <svg className="ep-input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            <input type="url" placeholder="https://..." value={props.expenseImageUrl || ''}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => props.setExpenseImageUrl(e.target.value)} />
           </div>
         </div>
-      )}
+
+        {/* Actions */}
+        <div className="ep-modal-actions">
+          <label className="ep-recurring-checkbox">
+            <input type="checkbox" checked={isRecurringExpense}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsRecurringExpense(e.target.checked)} />
+            <span>Add as recurring expense</span>
+          </label>
+          <button type="submit" className="ep-modal-submit">{editingExpense ? 'Update expense' : 'Add expense'}</button>
+          <button type="button" className="ep-modal-cancel" onClick={() => { setShowExpenseModalState(false); setEditingExpense(null); resetExpenseForm() }}>Cancel</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+)}
     </div>
   )
 }

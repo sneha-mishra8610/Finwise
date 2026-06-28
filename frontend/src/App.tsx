@@ -1953,9 +1953,53 @@ function App() {
       <div className={`app ${theme === 'light' ? 'light-mode' : ''}`}>
         <header className="app-header">
           <div className="header-left">
-            <button className="theme-toggle" onClick={() => setTheme(p => p === 'dark' ? 'light' : 'dark')} aria-label="Toggle theme">🌙</button>
-            <h1>Finwise</h1>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+  {/* Icon mark */}
+  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="36" height="36" rx="10" fill="url(#fw-bg)"/>
+    <path d="M8 26 L14 18 L19 22 L26 12" stroke="url(#fw-line)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M8 28 C8 28 10 24 14 22 C18 20 19 22 19 22 C19 22 22 16 26 12 L26 28 Z" fill="url(#fw-fill)" opacity="0.35"/>
+    {/* Sparkle */}
+    <path d="M27 9 L27.5 10.5 L29 11 L27.5 11.5 L27 13 L26.5 11.5 L25 11 L26.5 10.5 Z" fill="#a29bfe"/>
+    <defs>
+      <linearGradient id="fw-bg" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#7c3aed"/>
+        <stop offset="100%" stopColor="#5b21b6"/>
+      </linearGradient>
+      <linearGradient id="fw-line" x1="8" y1="26" x2="26" y2="12" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#2dcc8e"/>
+        <stop offset="100%" stopColor="#00d4aa"/>
+      </linearGradient>
+      <linearGradient id="fw-fill" x1="8" y1="28" x2="26" y2="12" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#2dcc8e"/>
+        <stop offset="100%" stopColor="#00d4aa"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  {/* Wordmark */}
+  <span style={{
+    fontSize: '1.35rem',
+    fontWeight: 800,
+    letterSpacing: '-0.02em',
+    lineHeight: 1,
+    fontFamily: 'Inter, "Segoe UI", sans-serif',
+  }}>
+    <span style={{ color: theme === 'light' ? '#1a1040' : '#ffffff' }}>Fin</span>
+    <span style={{ background: 'linear-gradient(90deg, #7c3aed, #2dcc8e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Wise</span>
+  </span>
+</div>
           </div>
+          <div className="header-right">
+    <button
+      className="theme-toggle"
+      onClick={() => setTheme(p => p === 'dark' ? 'light' : 'dark')}
+      aria-label="Toggle theme"
+    >
+      {theme === 'light' ? '🌙' : '☀️'}
+    </button>
+  </div>
         </header>
         <AuthPage
           theme={theme}
@@ -1980,8 +2024,42 @@ function App() {
     <div className={`app ${theme === 'light' ? 'light-mode' : ''}`}>
       <header className="app-header">
         <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button className="theme-toggle" onClick={() => setTheme(p => p === 'dark' ? 'light' : 'dark')} aria-label="Toggle theme">🌙</button>
-          <h1 style={{ margin: 0 }}>FinWise</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+  {/* Icon mark */}
+  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="36" height="36" rx="10" fill="url(#fw-bg)"/>
+    <path d="M8 26 L14 18 L19 22 L26 12" stroke="url(#fw-line)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M8 28 C8 28 10 24 14 22 C18 20 19 22 19 22 C19 22 22 16 26 12 L26 28 Z" fill="url(#fw-fill)" opacity="0.35"/>
+    {/* Sparkle */}
+    <path d="M27 9 L27.5 10.5 L29 11 L27.5 11.5 L27 13 L26.5 11.5 L25 11 L26.5 10.5 Z" fill="#a29bfe"/>
+    <defs>
+      <linearGradient id="fw-bg" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#7c3aed"/>
+        <stop offset="100%" stopColor="#5b21b6"/>
+      </linearGradient>
+      <linearGradient id="fw-line" x1="8" y1="26" x2="26" y2="12" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#2dcc8e"/>
+        <stop offset="100%" stopColor="#00d4aa"/>
+      </linearGradient>
+      <linearGradient id="fw-fill" x1="8" y1="28" x2="26" y2="12" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#2dcc8e"/>
+        <stop offset="100%" stopColor="#00d4aa"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  {/* Wordmark */}
+  <span style={{
+    fontSize: '1.35rem',
+    fontWeight: 800,
+    letterSpacing: '-0.02em',
+    lineHeight: 1,
+    fontFamily: 'Inter, "Segoe UI", sans-serif',
+  }}>
+    <span style={{ color: theme === 'light' ? '#1a1040' : '#ffffff' }}>Fin</span>
+    <span style={{ background: 'linear-gradient(90deg, #7c3aed, #2dcc8e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Wise</span>
+  </span>
+</div>
         </div>
         <div className="header-center">
           {['Groups', 'Friends', 'Activity'].includes(activeTab) && !groupDetailView && !friendDetailView && (
@@ -2000,6 +2078,13 @@ function App() {
           <button onClick={handleShowNotifications} aria-label="Notifications">
             🔔{unreadNotifications.length > 0 && <span style={{ marginLeft: 6, color: '#d92d20', fontWeight: 700 }}>{unreadNotifications.length}</span>}
           </button>
+          <button
+      className="theme-toggle"
+      onClick={() => setTheme(p => p === 'dark' ? 'light' : 'dark')}
+      aria-label="Toggle theme"
+    >
+      {theme === 'light' ? '🌙' : '☀️'}
+    </button>
         </div>
       </header>
 

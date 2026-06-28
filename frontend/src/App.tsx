@@ -1260,6 +1260,17 @@ function App() {
     await fetchActivities(currentUserId)
   }
 
+  async function handleSettleFriend(friendId: string) {
+    if (!currentUserId) return
+    try {
+      await authedFetch(`${API_BASE}/expenses/settle-with-friend?userId=${currentUserId}&friendId=${friendId}`, { method: 'POST' })
+      await fetchFriendBalances()
+      await fetchActivities(currentUserId)
+      await fetchUsers()
+      await fetchDashboardSummary()
+    } catch { /* ignore */ }
+  }
+
   async function handleCreateGroup(e: React.FormEvent) {
     e.preventDefault()
     if (!currentUserId || !groupName) return
@@ -2328,6 +2339,7 @@ function App() {
                 startEditFriend={startEditFriend}
                 handleRemoveFriend={handleRemoveFriend}
                 handleRemindFriend={handleRemindFriend}
+                handleSettleFriend={handleSettleFriend}
                 setFriendDetailView={setFriendDetailView}
                 setExpenseDetailView={setExpenseDetailView}
                 expenseWorkspacePool={expenseWorkspacePool}
@@ -2375,6 +2387,7 @@ function App() {
                 startEditFriend={startEditFriend}
                 handleRemoveFriend={handleRemoveFriend}
                 handleRemindFriend={handleRemindFriend}
+                handleSettleFriend={handleSettleFriend}
                 setFriendDetailView={setFriendDetailView}
                 setExpenseDetailView={setExpenseDetailView}
                 expenseWorkspacePool={expenseWorkspacePool}

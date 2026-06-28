@@ -48,6 +48,7 @@ export default function FriendsPage(props: FriendsPageProps) {
     startEditFriend,
     handleRemoveFriend,
     handleRemindFriend,
+    handleSettleFriend,
     setExpenseDetailView,
     expenseWorkspacePool,
     isExpenseUnsettledForCurrentUser,
@@ -419,10 +420,13 @@ export default function FriendsPage(props: FriendsPageProps) {
                         <div className="fp-dropdown">
                           <button type="button" className="fp-dropdown-item"
                             onClick={() => startEditFriend(friend)}>Edit</button>
-                          {bal !== 0 && (
+                          {bal < 0 ? (
+                            <button type="button" className="fp-dropdown-item fp-dropdown-success"
+                              onClick={() => handleSettleFriend(friend.id)}>Settle</button>
+                          ) : bal > 0 ? (
                             <button type="button" className="fp-dropdown-item"
                               onClick={() => handleRemindFriend(friend.id)}>Remind</button>
-                          )}
+                          ) : null}
                           <button type="button" className="fp-dropdown-item fp-dropdown-danger"
                             onClick={() => handleRemoveFriend(friend.id)}>Remove</button>
                         </div>
@@ -908,6 +912,8 @@ export default function FriendsPage(props: FriendsPageProps) {
         .fp-dropdown-item:hover { background: rgba(255,255,255,0.06); }
         .fp-dropdown-danger { color: #f87171 !important; }
         .fp-dropdown-danger:hover { background: rgba(248,113,113,0.1) !important; }
+        .fp-dropdown-success { color: #4ade80 !important; }
+        .fp-dropdown-success:hover { background: rgba(74,222,128,0.1) !important; }
 
         /* Load more */
         .fp-load-more {
@@ -1015,6 +1021,8 @@ export default function FriendsPage(props: FriendsPageProps) {
         }
         .app.light-mode .fp-dropdown-item { color: rgba(47,32,80,0.8); }
         .app.light-mode .fp-dropdown-item:hover { background: rgba(108,92,231,0.05); }
+        .app.light-mode .fp-dropdown-success { color: #16a34a !important; }
+        .app.light-mode .fp-dropdown-success:hover { background: rgba(22,163,74,0.08) !important; }
         .app.light-mode .fp-awaiting-badge { color: rgba(47,32,80,0.44); border-color: rgba(47,32,80,0.14); }
         .app.light-mode .fp-btn-outline {
           border-color: rgba(108,92,231,0.2);

@@ -23,49 +23,62 @@ import java.util.Set;
 @Service
 public class ExpenseService {
 
+    private static final String DEFAULT_CATEGORY = "Miscellaneous";
+    private static final String SELECT_CATEGORY = "Select";
+
     private final ExpenseRepository expenseRepository;
     private final ActivityRepository activityRepository;
     private final UserRepository userRepository;
     private final ExpenseEditLogService expenseEditLogService;
+    private final ExpenseCategorizationService expenseCategorizationService;
 
     public ExpenseService(ExpenseRepository expenseRepository, ActivityRepository activityRepository,
-                          UserRepository userRepository,ExpenseEditLogService expenseEditLogService) {
+                          UserRepository userRepository,ExpenseEditLogService expenseEditLogService,
+                          ExpenseCategorizationService expenseCategorizationService) {
         this.expenseRepository = expenseRepository;
         this.activityRepository = activityRepository;
         this.userRepository = userRepository;
         this.expenseEditLogService=expenseEditLogService;
+        this.expenseCategorizationService = expenseCategorizationService;
     }
 
     public Expense createExpense(Expense expense) {
-        generateDueRecurringExpenses();
-        if (expense.getId() != null && expense.getId().isBlank()) {
-            expense.setId(null);
-        }
-        normalizeExpense(expense);
-        validateCurrency(expense);
-        validateRecurrence(expense);
-        validateCustomSplits(expense);
 
-        if (expense.getSettledByUser() == null) {
-            Map<String, Boolean> settledMap = new HashMap<>();
-            for (String participantId : expense.getParticipantIds()) {
-            if (!participantId.equals(expense.getPayerId())) {
-            settledMap.put(participantId, false);
-            }
-          }
-          expense.setSettledByUser(settledMap);
-        }
-        expense.setExpenseStatus(Expense.ExpenseStatus.Unsettled);
+generateDueRecurringExpenses();
 
-        System.out.println("[ExpenseService] Received currency: " + expense.getCurrency());
-
-        Expense saved = expenseRepository.save(expense);
-
-        recordExpenseAddedActivities(saved);
-        recordOwedActivities(saved);
-
-        return saved;
+    if (expense.getId() != null && expense.getId().isBlank()) {
+        expense.setId(null);
     }
+
+    normalizeExpense(expense);
+
+    applyCategoryRules(expense);
+
+    validateCurrency(expense);
+    validateRecurrence(expense);
+    validateCustomSplits(expense);
+
+    if (expense.getSettledByUser() == null) {
+        Map<String, Boolean> settledMap = new HashMap<>();
+
+        for (String participantId : expense.getParticipantIds()) {
+            if (!participantId.equals(expense.getPayerId())) {
+                settledMap.put(participantId, false);
+            }
+        }
+
+        expense.setSettledByUser(settledMap);
+    }
+
+    expense.setExpenseStatus(Expense.ExpenseStatus.Unsettled);
+
+    Expense saved = expenseRepository.save(expense);
+
+    recordExpenseAddedActivities(saved);
+    recordOwedActivities(saved);
+
+    return saved;
+}
 
     private Map<String, Object> extractExpenseFields(Expense expense) {
     Map<String, Object> map = new HashMap<>();
@@ -84,6 +97,7 @@ public class ExpenseService {
         }
         generateDueRecurringExpenses();
         normalizeExpense(expense);
+        applyCategoryRules(expense);
         validateRecurrence(expense);
         validateCustomSplits(expense);
         Map<String, Object> oldValues = extractExpenseFields(existing);
@@ -118,9 +132,7 @@ public class ExpenseService {
     }
 
     private void normalizeExpense(Expense expense) {
-        if (expense.getTag() == null || expense.getTag().isBlank()) {
-            expense.setTag("Others");
-        } else {
+        if (expense.getTag() != null) {
             expense.setTag(expense.getTag().trim());
         }
         if (expense.getCurrency() == null) {
@@ -137,6 +149,31 @@ public class ExpenseService {
             expense.setRecurrenceInterval(null);
             expense.setRecurrenceEndDate(null);
         }
+    }
+
+    private void applyCategoryRules(Expense expense) {
+        if (expense == null) {
+            return;
+        }
+
+        String currentTag = expense.getTag();
+        if (!isUncategorized(currentTag)) {
+            expense.setTag(currentTag.trim());
+            return;
+        }
+
+        String categorized = expenseCategorizationService.categorizeExpense(expense.getDescription());
+        expense.setTag(categorized != null && !categorized.isBlank() ? categorized : DEFAULT_CATEGORY);
+    }
+
+    private boolean isUncategorized(String tag) {
+        if (tag == null || tag.isBlank()) {
+            return true;
+        }
+        String normalized = tag.trim().toLowerCase();
+        return SELECT_CATEGORY.toLowerCase().equals(normalized)
+                || "uncategorized".equals(normalized)
+                || "uncategorised".equals(normalized);
     }
 
     private void validateRecurrence(Expense expense) {
@@ -232,6 +269,7 @@ public class ExpenseService {
         generated.setRecurring(false);
         generated.setGeneratedFromRecurringId(template.getId());
         generated.setRecurrenceOccurrenceDate(occurrenceDate);
+        applyCategoryRules(generated);
         return generated;
     }
 

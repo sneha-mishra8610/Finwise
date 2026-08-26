@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpHeaders;
 import jakarta.servlet.http.HttpServletRequest;
 import com.example.splitwise.service.JwtService;
+import com.example.splitwise.service.ExpenseCategorizationService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,12 +27,19 @@ public class ExpenseController {
     private final NotificationService notificationService;
     private final JwtService jwtService;
     private final ExpenseRepository expenseRepository;
+    private final ExpenseCategorizationService expenseCategorizationService;
 
-    public ExpenseController(ExpenseService expenseService, NotificationService notificationService, JwtService jwtService, ExpenseRepository expenseRepository) {
+    public ExpenseController(
+        ExpenseService expenseService,
+        NotificationService notificationService,
+        JwtService jwtService,
+        ExpenseRepository expenseRepository,
+        ExpenseCategorizationService expenseCategorizationService) {
         this.expenseService=expenseService;
         this.notificationService = notificationService;
         this.jwtService=jwtService;
         this.expenseRepository=expenseRepository;
+        this.expenseCategorizationService=expenseCategorizationService;
     }
 
     @PutMapping("/{id}")
@@ -51,9 +59,18 @@ public class ExpenseController {
     }
 
     @PostMapping
-    public ResponseEntity<Expense> createExpense(@Valid @RequestBody Expense expense) {
-        return ResponseEntity.ok(expenseService.createExpense(expense));
-    }
+public ResponseEntity<Expense> createExpense(@Valid @RequestBody Expense expense) {
+
+    if ("select".equalsIgnoreCase(expense.getTag())) {
+
+        String aiCategory = expenseCategorizationService
+                .categorizeExpense(expense.getDescription());
+
+        expense.setTag(aiCategory);
+    } 
+
+    return ResponseEntity.ok(expenseService.createExpense(expense));
+}
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteExpense(@PathVariable("id") String id) {
@@ -141,4 +158,3 @@ public class ExpenseController {
                                                                             return ResponseEntity.ok(notificationService.sendReminderToFriend(userId, friendId));
                                     }
 }
-

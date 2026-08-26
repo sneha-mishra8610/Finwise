@@ -425,7 +425,7 @@ function App() {
   }
 
   function resetExpenseForm() {
-    setExpenseDescription(''); setExpenseTag('miscellaneous'); setExpenseAmount('')
+    setExpenseDescription(''); setExpenseTag('Select'); setExpenseAmount('')
     setExpenseCurrency('INR'); setIsGroupExpense(false); setIsFriendExpense(false)
     setSelectedFriendId(''); setExpenseImageUrl(''); setExpensePayerId('')
     setSplitMode('equal'); setCustomSplits({}); setIsRecurringExpense(false)
@@ -453,7 +453,7 @@ function App() {
   const [groupMemberIds, setGroupMemberIds] = useState<string[]>([])
   const [showCreateGroupPanel, setShowCreateGroupPanel] = useState(false)
   const [expenseDescription, setExpenseDescription] = useState('')
-  const [expenseTag, setExpenseTag] = useState('miscellaneous')
+  const [expenseTag, setExpenseTag] = useState('Select')
   const [expenseAmount, setExpenseAmount] = useState('')
   const [expenseCurrency, setExpenseCurrency] = useState('INR')
   const [isGroupExpense, setIsGroupExpense] = useState(false)
@@ -1099,7 +1099,8 @@ function App() {
     const useGroup = isGroupExpense || isFriendExpense
     const payer = useGroup && expensePayerId ? expensePayerId : currentUserId
     const payload: Record<string, unknown> = {
-      description: expenseDescription, tag: normalizeExpenseTag(expenseTag),
+      description: expenseDescription,
+      tag: expenseTag,
       amount: parseFloat(expenseAmount), currency: expenseCurrency, payerId: payer,
       createdBy: editingExpense ? editingExpense.createdBy : currentUserId,
       participantIds: useGroup && resolvedGroupId

@@ -741,6 +741,7 @@ export default function ExpensesPage(props: ExpensesPageProps) {
             <svg className="ep-input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
             <select value={expenseTag} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExpenseTag(e.target.value)}
               style={{ paddingLeft: '2.2rem' }}>
+              <option value="Select">Select</option>
               {['groceries','rent','transport','travel','insurance','investments','utilities','subscriptions','health','education','childcare','pets','taxes','gifts','charity','maintenance','loans','fees','entertainment','shopping','miscellaneous'].map(c =>
                 <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
             </select>

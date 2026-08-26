@@ -1406,6 +1406,19 @@ function App() {
     }
   }
 
+  async function handleGenerateInsights(period: string) {
+    if (!currentUserId) throw new Error('No user selected.')
+    const res = await authedFetch(`${API_BASE}/ai/insights?period=${encodeURIComponent(period)}&preferredCurrency=${encodeURIComponent(defaultCurrency)}`, { method: 'GET' })
+    if (!res.ok) {
+      throw new Error('Failed to generate insights. Please try again.')
+    }
+
+    const data = await res.json().catch(() => null)
+    return Array.isArray(data?.insights)
+      ? data.insights.filter((item: unknown): item is string => typeof item === 'string' && item.trim().length > 0)
+      : []
+  }
+
   function resetPasswordForm() { setCurrentPassword(''); setNewPassword(''); setConfirmNewPassword(''); setPasswordChangeError(''); setPasswordChangeSuccess(''); setPasswordChangeLoading(false) }
   function openPasswordModal() { resetPasswordForm(); setShowPasswordModal(true) }
   function closePasswordModal() { setShowPasswordModal(false); resetPasswordForm() }
@@ -2714,7 +2727,7 @@ function App() {
             ) : null} />
 
             <Route path="/export" element={
-              <ExportPage handleExport={handleExport} />
+              <ExportPage handleExport={handleExport} handleGenerateInsights={handleGenerateInsights} />
             } />
 
             <Route path="/account" element={currentUser ? (

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 export type ExportPageProps = Record<string, any>
 
 const EXPORT_TYPES = [
@@ -76,8 +76,38 @@ const EXPORT_TYPES = [
 ]
 
 export default function ExportPage(props: ExportPageProps) {
-  const { handleExport } = props
+  const { handleExport, handleGenerateInsights } = props
   const [period, setPeriod] = useState<string>('all')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [insights, setInsights] = useState<string[]>([])
+  const [insightError, setInsightError] = useState('')
+
+  useEffect(() => {
+    setInsights([])
+    setInsightError('')
+  }, [period])
+
+  async function generateInsights() {
+    setIsGenerating(true)
+    setInsightError('')
+    try {
+      const generated = await handleGenerateInsights(period)
+      setInsights(Array.isArray(generated) ? generated : [])
+    } catch (error) {
+      setInsightError(error instanceof Error ? error.message : 'Failed to generate insights. Please try again.')
+      setInsights([])
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const lightbulbIcon = (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 18h6" />
+      <path d="M10 22h4" />
+      <path d="M12 2a7 7 0 0 0-4 12c.7.6 1.2 1.5 1.4 2.4h5.2c.2-.9.7-1.8 1.4-2.4A7 7 0 0 0 12 2Z" />
+    </svg>
+  )
 
   return (
     <div className="ep-shell">
@@ -140,6 +170,58 @@ export default function ExportPage(props: ExportPageProps) {
         ))}
       </div>
 
+      <section className="ep-ai-card" aria-label="AI Financial Insights">
+        <div className="ep-ai-header">
+          <div className="ep-ai-icon">
+            <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+              <rect width="48" height="48" rx="12" fill="rgba(108,92,231,0.14)"/>
+              <path d="M24 10c-3.9 0-7 3.1-7 7 0 2.6 1.4 4.9 3.5 6.1V26h7v-2.9c2.1-1.2 3.5-3.5 3.5-6.1 0-3.9-3.1-7-7-7Z" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M20 29h8M21 33h6" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <div className="ep-ai-copy">
+            <div className="ep-ai-title-row">
+              <h3 className="ep-ai-title">AI Financial Insights</h3>
+              <span className="ep-ai-badge">BETA</span>
+            </div>
+            <p className="ep-ai-desc">Get personalized insights about your spending patterns and financial health.</p>
+          </div>
+        </div>
+
+        <div className="ep-ai-body">
+          <button
+            type="button"
+            className="ep-ai-btn"
+            onClick={generateInsights}
+            disabled={isGenerating}
+          >
+            {isGenerating ? 'Generating...' : 'Generate Insights'}
+          </button>
+
+          <div className="ep-ai-results" aria-live="polite">
+            {isGenerating ? (
+              <div className="ep-ai-loading">Analyzing your financial data...</div>
+            ) : insightError ? (
+              <div className="ep-ai-error">{insightError}</div>
+            ) : insights.length > 0 ? (
+              <>
+                <div className="ep-ai-results-title">Your Insights</div>
+                <ul className="ep-ai-list">
+                  {insights.map((item, index) => (
+                    <li key={`${item}-${index}`} className="ep-ai-item">
+                      <span className="ep-ai-item-icon">{lightbulbIcon}</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <div className="ep-ai-placeholder">Generate insights for the selected time period.</div>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* ── Info footer ── */}
       <section className="ep-info-card">
         <div className="ep-info-icon">
@@ -179,6 +261,137 @@ export default function ExportPage(props: ExportPageProps) {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 1rem;
+        }
+
+        .ep-ai-card {
+          background: linear-gradient(180deg, rgba(117, 95, 255, 0.10) 0%, rgba(18, 17, 34, 0.98) 100%);
+          border: 1px solid rgba(167, 139, 250, 0.24);
+          border-radius: 16px;
+          padding: 1.35rem 1.4rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          box-shadow: 0 10px 28px rgba(108, 92, 231, 0.08);
+        }
+
+        .ep-ai-header {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.9rem;
+        }
+
+        .ep-ai-copy {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .ep-ai-title-row {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+          margin-bottom: 0.2rem;
+        }
+
+        .ep-ai-title {
+          margin: 0;
+          font-size: 1rem;
+          font-weight: 700;
+          color: #fff;
+        }
+
+        .ep-ai-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.16rem 0.45rem;
+          border-radius: 999px;
+          font-size: 0.64rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          color: #8b5cf6;
+          background: rgba(167, 139, 250, 0.14);
+          border: 1px solid rgba(167, 139, 250, 0.22);
+        }
+
+        .ep-ai-desc {
+          margin: 0;
+          font-size: 0.83rem;
+          color: rgba(255,255,255,0.58);
+          line-height: 1.55;
+        }
+
+        .ep-ai-body {
+          display: grid;
+          grid-template-columns: 220px minmax(0, 1fr);
+          gap: 1rem;
+          align-items: start;
+        }
+
+        .ep-ai-btn {
+          width: 100%;
+          padding: 0.85rem 1rem;
+          border-radius: 12px;
+          border: none;
+          font-size: 0.93rem;
+          font-weight: 700;
+          cursor: pointer;
+          color: #fff;
+          background: linear-gradient(90deg, #5c4de0, #8b5cf6);
+          box-shadow: 0 10px 18px rgba(108,92,231,0.28);
+          transition: transform 0.15s ease, opacity 0.15s ease;
+          align-self: start;
+        }
+        .ep-ai-btn:hover:not(:disabled) { transform: translateY(-1px); opacity: 0.96; }
+        .ep-ai-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
+        .ep-ai-results {
+          min-height: 84px;
+          padding: 0.1rem 0.05rem;
+        }
+
+        .ep-ai-results-title {
+          font-size: 0.93rem;
+          font-weight: 700;
+          color: #fff;
+          margin-bottom: 0.65rem;
+        }
+
+        .ep-ai-loading,
+        .ep-ai-placeholder {
+          font-size: 0.85rem;
+          color: rgba(255,255,255,0.62);
+          line-height: 1.55;
+        }
+
+        .ep-ai-error {
+          font-size: 0.85rem;
+          color: #ffb4b4;
+          line-height: 1.55;
+        }
+
+        .ep-ai-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.62rem;
+        }
+
+        .ep-ai-item {
+          display: flex;
+          gap: 0.6rem;
+          align-items: flex-start;
+          color: rgba(255,255,255,0.86);
+          font-size: 0.85rem;
+          line-height: 1.55;
+        }
+
+        .ep-ai-item-icon {
+          color: #c8b1ff;
+          flex-shrink: 0;
+          margin-top: 0.05rem;
         }
 
         .ep-card {
@@ -308,6 +521,7 @@ export default function ExportPage(props: ExportPageProps) {
 
         @media (max-width: 900px) {
           .ep-cards-grid { grid-template-columns: 1fr; }
+          .ep-ai-body { grid-template-columns: 1fr; }
         }
         @media (max-width: 640px) {
           .ep-title { font-size: 1.2rem; }
